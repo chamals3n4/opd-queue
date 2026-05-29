@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: opdqueue-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - opdqueue_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  opdqueue_pgdata:

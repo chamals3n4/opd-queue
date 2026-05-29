@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Status — OPD Queue</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --green-50: #f0fdf4;
+            --green-100: #dcfce7;
+            --green-600: #16a34a;
+            --green-700: #15803d;
+            --green-800: #166534;
+        }
+        body { background: var(--green-50); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .status-card { background: #fff; border-radius: 20px; box-shadow: 0 4px 24px rgba(0,0,0,.08); max-width: 420px; width: 100%; overflow: hidden; }
+        .status-header { background: var(--green-700); color: #fff; padding: 24px; text-align: center; }
+        .status-header h5 { opacity: .85; font-size: .85rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+        .ticket-number { font-size: 2.75rem; font-weight: 800; letter-spacing: 2px; }
+        .status-body { padding: 28px; }
+        .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #f3f4f6; }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-label { color: #6b7280; font-size: .9rem; font-weight: 500; }
+        .stat-value { font-weight: 700; font-size: 1.1rem; color: #1f2937; }
+        .position-badge { background: var(--green-100); color: var(--green-800); padding: 4px 14px; border-radius: 20px; font-weight: 700; font-size: 1.2rem; }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: .8rem; font-weight: 700; display: inline-block; }
+        .status-WAITING { background: #dbeafe; color: #1d4ed8; }
+        .status-CALLED { background: #fef3c7; color: #b45309; animation: pulse 1.5s infinite; }
+        .status-IN_PROGRESS { background: #dbeafe; color: #1d4ed8; }
+        .status-COMPLETED { background: #dcfce7; color: #166534; }
+        .status-NO_SHOW { background: #fee2e2; color: #991b1b; }
+        .status-CANCELLED { background: #f3f4f6; color: #6b7280; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
+        .refresh-time { font-size: .75rem; color: #9ca3af; text-align: center; margin-top: 16px; }
+    </style>
+</head>
+<body>
+
+<div class="status-card">
+    <div class="status-header">
+        <h5>Your Queue Status</h5>
+        <div class="ticket-number" id="ticketNumber" th:text="${ticketNumber}">—</div>
+    </div>
+    <div class="status-body">
+        <div class="stat-row">
+            <span class="stat-label"><i class="bi bi-building me-2"></i>Department</span>
+            <span class="stat-value" id="departmentName">—</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label"><i class="bi bi-flag me-2"></i>Status</span>
+            <span id="statusBadge">—</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label"><i class="bi bi-sort-numeric-down me-2"></i>Position</span>
+            <span class="position-badge" id="queuePosition">—</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label"><i class="bi bi-people me-2"></i>People Ahead</span>
+            <span class="stat-value" id="peopleAhead">—</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label"><i class="bi bi-clock me-2"></i>Est. Wait Time</span>
+            <span class="stat-value" id="waitTime">—</span>
+        </div>
+    </div>
+    <div class="refresh-time" id="refreshInfo">Loading...</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+    const ticketNumber = document.getElementById('ticketNumber').textContent.trim();
+
+    function updateUI(data) {
+        document.getElementById('departmentName').textContent = data.departmentName || '—';
+        document.getElementById('queuePosition').textContent = '#' + (data.queuePosition || '—');
+        document.getElementById('peopleAhead').textContent = data.peopleAhead != null ? data.peopleAhead : '—';
+        document.getElementById('waitTime').textContent = (data.estimatedWaitMinutes != null ? data.estimatedWaitMinutes + ' min' : '—');
+
+        const badge = document.getElementById('statusBadge');
+        if (data.status) {
+            badge.textContent = data.status.replace(/_/g, ' ');
+            badge.className = 'status-badge status-' + data.status;
+        }
+    }
+
+    async function fetchStatus() {
+        try {
+            const res = await fetch(`/api/queue/status/${ticketNumber}`);
+            if (!res.ok) throw new Error('Failed to load');
+            const data = await res.json();
+            updateUI(data);
+            document.getElementById('refreshInfo').textContent = 'Updated just now';
+        } catch (e) {
+            document.getElementById('refreshInfo').textContent = 'Could not load status';
+        }
+    }
+
+    // WebSocket for "called" notification
+    const socket = new SockJS('/ws');
+    const stomp = Stomp.over(socket);
+    stomp.connect({}, () => {
+        stomp.subscribe(`/topic/ticket/${ticketNumber}`, msg => {
+            const data = JSON.parse(msg.body);
+            updateUI(data);
+        });
+    });
+
+    fetchStatus();
+    setInterval(fetchStatus, 15000);
+</script>
+
+</body>
+</html>

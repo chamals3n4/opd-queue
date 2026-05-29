@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reception Dashboard — OPD Queue</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --green-50: #f0fdf4;
+            --green-100: #dcfce7;
+            --green-600: #16a34a;
+            --green-700: #15803d;
+            --green-800: #166534;
+        }
+        body { background: var(--green-50); min-height: 100vh; }
+        .navbar-brand { font-weight: 700; letter-spacing: -0.5px; }
+        .card { border: none; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+        .card-header { border-radius: 16px 16px 0 0 !important; font-weight: 600; }
+        .btn-green { background: var(--green-600); border: none; color: #fff; }
+        .btn-green:hover { background: var(--green-700); color: #fff; }
+        .btn-outline-green { border-color: var(--green-600); color: var(--green-600); }
+        .btn-outline-green:hover { background: var(--green-600); color: #fff; }
+        .ticket-number { font-size: 2rem; font-weight: 800; color: var(--green-700); letter-spacing: 1px; }
+        .emergency-badge { background: #dc2626; color: #fff; padding: 2px 12px; border-radius: 20px; font-size: .8rem; font-weight: 600; }
+        .detail-label { font-size: .8rem; color: #6b7280; text-transform: uppercase; margin-bottom: 0; }
+        .detail-value { font-weight: 600; color: #1f2937; }
+        #ticketResult { display: none; }
+        #lookupResult { display: none; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg" style="background: var(--green-700);">
+    <div class="container-fluid px-4">
+        <span class="navbar-brand text-white">
+            <i class="bi bi-hospital me-2"></i>OPD Queue Management
+        </span>
+        <div class="d-flex">
+            <a href="/display/1" class="btn btn-outline-light btn-sm me-2" target="_blank">
+                <i class="bi bi-tv me-1"></i>Display Board
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid py-4 px-4">
+    <div class="row g-4">
+
+        <!-- Left: Register Patient -->
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header bg-white border-bottom py-3">
+                    <i class="bi bi-person-plus text-green me-2" style="color:var(--green-600)"></i>Register New Patient
+                </div>
+                <div class="card-body">
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">NIC Number</label>
+                            <input type="text" class="form-control" name="nic" placeholder="e.g. 200012345678" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Full Name</label>
+                            <input type="text" class="form-control" name="fullName" placeholder="Patient full name" required>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Date of Birth</label>
+                                <input type="date" class="form-control" name="dateOfBirth" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Gender</label>
+                                <select class="form-select" name="gender" required>
+                                    <option value="">Select...</option>
+                                    <option value="MALE">Male</option>
+                                    <option value="FEMALE">Female</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Contact Number</label>
+                                <input type="text" class="form-control" name="contactNumber" placeholder="07XXXXXXXX" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Patient Type</label>
+                                <select class="form-select" name="patientType" required>
+                                    <option value="">Select...</option>
+                                    <option value="WALK_IN">Walk-in</option>
+                                    <option value="PRE_REGISTERED">Pre-registered</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-green w-100">
+                            <i class="bi bi-check-lg me-1"></i>Register Patient
+                        </button>
+                    </form>
+                    <div id="registerAlert" class="alert mt-3 d-none"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Issue Ticket -->
+        <div class="col-lg-7">
+            <div class="card mb-4">
+                <div class="card-header bg-white border-bottom py-3">
+                    <i class="bi bi-ticket-perforated me-2" style="color:var(--green-600)"></i>Issue Queue Ticket
+                </div>
+                <div class="card-body">
+                    <!-- Patient Lookup -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Lookup Patient by NIC</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="lookupNic" placeholder="Enter NIC">
+                            <button class="btn btn-outline-green" type="button" id="lookupBtn">
+                                <i class="bi bi-search"></i> Lookup
+                            </button>
+                        </div>
+                        <div id="lookupResult" class="alert alert-success mt-2 py-2">
+                            <i class="bi bi-person-check me-1"></i><span id="lookupName"></span>
+                        </div>
+                    </div>
+
+                    <form id="issueForm">
+                        <input type="hidden" id="issueNic" name="nic">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Department</label>
+                                <select class="form-select" name="departmentId" id="departmentSelect" required>
+                                    <option value="">Loading...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="emergency" id="emergencyCheck" value="true">
+                                    <label class="form-check-label fw-semibold text-danger" for="emergencyCheck">
+                                        <i class="bi bi-exclamation-triangle"></i> Emergency
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-green w-100" id="issueBtn" disabled>
+                            <i class="bi bi-ticket-detailed me-1"></i>Issue Ticket
+                        </button>
+                    </form>
+                    <div id="issueAlert" class="alert mt-3 d-none"></div>
+                </div>
+            </div>
+
+            <!-- Ticket Result -->
+            <div class="card" id="ticketResult">
+                <div class="card-header bg-green text-white d-flex justify-content-between align-items-center py-3" style="background:var(--green-700)!important">
+                    <span><i class="bi bi-check-circle me-1"></i>Ticket Issued</span>
+                    <span id="emergencyTag" class="emergency-badge d-none">EMERGENCY</span>
+                </div>
+                <div class="card-body text-center py-4">
+                    <p class="text-muted small mb-1">Queue Number</p>
+                    <div class="ticket-number mb-1" id="resultTicketNumber">—</div>
+                    <div class="row mt-3 g-2">
+                        <div class="col-6">
+                            <p class="detail-label">Patient</p>
+                            <p class="detail-value" id="resultPatient">—</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="detail-label">Department</p>
+                            <p class="detail-value" id="resultDept">—</p>
+                        </div>
+                        <div class="col-4">
+                            <p class="detail-label">Position</p>
+                            <p class="detail-value" id="resultPosition">—</p>
+                        </div>
+                        <div class="col-4">
+                            <p class="detail-label">Est. Wait</p>
+                            <p class="detail-value" id="resultWait">—</p>
+                        </div>
+                        <div class="col-4">
+                            <p class="detail-label">Status</p>
+                            <p class="detail-value" id="resultStatus">—</p>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-4">
+                        <button class="btn btn-green flex-fill" onclick="printSlip()">
+                            <i class="bi bi-printer me-1"></i>Print Slip
+                        </button>
+                        <button class="btn btn-outline-green flex-fill" id="newTicketBtn">
+                            <i class="bi bi-plus-lg me-1"></i>New Ticket
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let currentSlipUrl = null;
+    let registeredNic = null;
+
+    // Load departments
+    fetch('/api/departments')
+        .then(r => r.json())
+        .then(depts => {
+            const sel = document.getElementById('departmentSelect');
+            sel.innerHTML = '<option value="">Select Department</option>';
+            depts.forEach(d => {
+                sel.innerHTML += `<option value="${d.id}">${d.name} (${d.departmentType})</option>`;
+            });
+        });
+
+    // Register patient
+    document.getElementById('registerForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const form = e.target;
+        const data = Object.fromEntries(new FormData(form));
+        const alert = document.getElementById('registerAlert');
+
+        try {
+            const res = await fetch('/api/patients/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message || 'Registration failed');
+            }
+            const patient = await res.json();
+            registeredNic = patient.nic || data.nic;
+            alert.className = 'alert alert-success mt-3';
+            alert.innerHTML = `<i class="bi bi-check-circle me-1"></i>Patient <strong>${patient.fullName || data.fullName}</strong> registered successfully. NIC: ${registeredNic}`;
+            alert.classList.remove('d-none');
+            document.getElementById('lookupNic').value = registeredNic;
+            document.getElementById('lookupName').textContent = patient.fullName || data.fullName;
+            document.getElementById('lookupResult').style.display = 'block';
+            document.getElementById('issueNic').value = registeredNic;
+            document.getElementById('issueBtn').disabled = false;
+            form.reset();
+        } catch (err) {
+            alert.className = 'alert alert-danger mt-3';
+            alert.innerHTML = `<i class="bi bi-exclamation-circle me-1"></i>${err.message}`;
+            alert.classList.remove('d-none');
+        }
+    });
+
+    // Lookup patient
+    document.getElementById('lookupBtn').addEventListener('click', async () => {
+        const nic = document.getElementById('lookupNic').value.trim();
+        if (!nic) return;
+        const lookupResult = document.getElementById('lookupResult');
+
+        try {
+            const res = await fetch(`/api/patients/${nic}`);
+            if (!res.ok) throw new Error('Patient not found');
+            const patient = await res.json();
+            document.getElementById('lookupName').textContent = patient.fullName;
+            document.getElementById('issueNic').value = nic;
+            document.getElementById('issueBtn').disabled = false;
+            lookupResult.style.display = 'block';
+            registeredNic = nic;
+        } catch (err) {
+            lookupResult.className = 'alert alert-danger mt-2 py-2';
+            lookupResult.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i>Patient not found. Please register first.';
+            lookupResult.style.display = 'block';
+        }
+    });
+
+    // Issue ticket
+    document.getElementById('issueForm').addEventListener('submit', async e => {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const data = {
+            nic: document.getElementById('issueNic').value,
+            departmentId: parseInt(formData.get('departmentId')),
+            emergency: document.getElementById('emergencyCheck').checked
+        };
+        const alert = document.getElementById('issueAlert');
+
+        if (!data.nic) {
+            alert.className = 'alert alert-warning mt-3';
+            alert.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i>Please lookup or register a patient first.';
+            alert.classList.remove('d-none');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/queue/issue', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message || 'Failed to issue ticket');
+            }
+            const ticket = await res.json();
+
+            // Show result
+            document.getElementById('resultTicketNumber').textContent = ticket.ticketNumber;
+            document.getElementById('resultPatient').textContent = ticket.patient?.fullName || '—';
+            document.getElementById('resultDept').textContent = ticket.department?.name || '—';
+            document.getElementById('resultPosition').textContent = '#' + (ticket.queuePosition || '—');
+            document.getElementById('resultWait').textContent = (ticket.estimatedWaitMinutes || '—') + ' min';
+            document.getElementById('resultStatus').textContent = ticket.status || '—';
+
+            const emergencyTag = document.getElementById('emergencyTag');
+            if (ticket.emergency) emergencyTag.classList.remove('d-none');
+            else emergencyTag.classList.add('d-none');
+
+            document.getElementById('ticketResult').style.display = 'block';
+
+            // Store for print
+            currentSlipUrl = `/api/tickets/${ticket.ticketNumber}/slip`;
+
+            alert.className = 'd-none';
+        } catch (err) {
+            alert.className = 'alert alert-danger mt-3';
+            alert.innerHTML = `<i class="bi bi-exclamation-circle me-1"></i>${err.message}`;
+            alert.classList.remove('d-none');
+        }
+    });
+
+    // Print slip
+    function printSlip() {
+        if (currentSlipUrl) {
+            window.open(currentSlipUrl, '_blank');
+        }
+    }
+
+    // New ticket - reset form
+    document.getElementById('newTicketBtn').addEventListener('click', () => {
+        document.getElementById('ticketResult').style.display = 'none';
+        document.getElementById('issueForm').reset();
+        document.getElementById('lookupNic').value = '';
+        document.getElementById('lookupResult').style.display = 'none';
+        document.getElementById('issueNic').value = '';
+        document.getElementById('issueBtn').disabled = true;
+        document.getElementById('issueAlert').classList.add('d-none');
+        document.getElementById('registerAlert').classList.add('d-none');
+    });
+</script>
+
+</body>
+</html>
