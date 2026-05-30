@@ -88,6 +88,7 @@ public class QueueService {
         department.setCurrentQueueCount(department.getCurrentQueueCount() + 1);
         departmentRepository.save(department);
 
+        eventListeners.forEach(l -> l.onTicketIssued(saved));
         eventListeners.forEach(l -> l.onQueueUpdated(department));
 
         return saved;
@@ -126,7 +127,10 @@ public class QueueService {
         ticket.setStatus(TicketStatus.COMPLETED);
         ticket.setCompletedAt(LocalDateTime.now());
         decrementQueue(ticket.getDepartment());
-        return ticketRepository.save(ticket);
+        QueueTicket saved = ticketRepository.save(ticket);
+        eventListeners.forEach(l -> l.onTicketCalled(saved));
+        eventListeners.forEach(l -> l.onQueueUpdated(ticket.getDepartment()));
+        return saved;
     }
 
     @Transactional
@@ -135,7 +139,9 @@ public class QueueService {
         validateTransition(ticket.getStatus(), TicketStatus.NO_SHOW);
         ticket.setStatus(TicketStatus.NO_SHOW);
         decrementQueue(ticket.getDepartment());
-        return ticketRepository.save(ticket);
+        QueueTicket saved = ticketRepository.save(ticket);
+        eventListeners.forEach(l -> l.onQueueUpdated(ticket.getDepartment()));
+        return saved;
     }
 
     public QueueStatusResponse getStatus(String ticketNumber) {
@@ -208,5 +214,22 @@ public class QueueService {
         int count = Math.max(0, department.getCurrentQueueCount() - 1);
         department.setCurrentQueueCount(count);
         departmentRepository.save(department);
+    }
+
+    @Transactional
+    public void resetDepartmentQueue(Long departmentId) {
+        Department department = departmentRepository.findById(departmentId)
+                .orElseThrow(() -> new DepartmentNotFoundException("Department not found: " + departmentId));
+
+        List<QueueTicket> active = ticketRepository
+                .findAllByDepartmentIdAndStatusOrderByIsEmergencyDescQueuePositionAsc(
+                        departmentId, TicketStatus.WAITING);
+
+        active.forEach(t -> t.setStatus(TicketStatus.CANCELLED));
+        ticketRepository.saveAll(active);
+
+        department.setCurrentQueueCount(0);
+        departmentRepository.save(department);
+        eventListeners.forEach(l -> l.onQueueUpdated(department));
     }
 }

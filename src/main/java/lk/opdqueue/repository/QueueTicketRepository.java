@@ -27,4 +27,10 @@ public interface QueueTicketRepository extends JpaRepository<QueueTicket, UUID> 
             @Param("deptId") Long deptId,
             @Param("statuses") List<TicketStatus> statuses
     );
+
+    @Query("SELECT COALESCE(MAX(CAST(SUBSTRING(q.ticketNumber, LENGTH(q.ticketNumber) - 3) AS int)), 0) " +
+            "FROM QueueTicket q WHERE q.ticketNumber LIKE CONCAT('%-', :date, '-%')")
+    Optional<Integer> findMaxTicketSequenceForDate(@Param("date") String date);
+
+    List<QueueTicket> findAllByStatusIn(List<TicketStatus> statuses);
 }

@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel — OPD Queue</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; color: #0f172a; min-height: 100vh; }
+        nav {
+            background: #fff;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 0 2rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-brand { font-size: 20px; font-weight: 700; color: #166534; display: flex; align-items: center; gap: 10px; }
+        .nav-badge { font-size: 12px; font-weight: 600; background: #fef3c7; color: #b45309; padding: 3px 10px; border-radius: 20px; }
+        .nav-links { display: flex; gap: 8px; }
+        .nav-link {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px; font-weight: 600; color: #64748b; text-decoration: none;
+            padding: 8px 16px; border-radius: 8px; border: 2px solid transparent;
+            transition: all 0.15s; cursor: pointer; background: none;
+        }
+        .nav-link:hover { background: #f1f5f9; color: #0f172a; }
+        .nav-link.active { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+        .layout { display: flex; height: calc(100vh - 64px); }
+        .sidebar {
+            width: 220px; background: #fff; border-right: 2px solid #e2e8f0;
+            padding: 1rem 0; flex-shrink: 0; overflow-y: auto;
+        }
+        .sidebar-title {
+            font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+            color: #94a3b8; padding: 0.75rem 1.25rem 0.5rem;
+        }
+        .sidebar-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 1.25rem; font-size: 14px; font-weight: 600; color: #64748b;
+            cursor: pointer; border: none; background: none; width: 100%;
+            text-align: left; font-family: 'Inter', sans-serif;
+            transition: all 0.1s; border-left: 3px solid transparent;
+        }
+        .sidebar-item:hover { background: #f8fafc; color: #0f172a; }
+        .sidebar-item.active { background: #f0fdf4; color: #166534; border-left-color: #16a34a; }
+        .sidebar-ico { font-size: 16px; width: 20px; text-align: center; }
+        .main { flex: 1; overflow-y: auto; padding: 2rem; }
+        .page-title { font-size: 24px; font-weight: 800; margin-bottom: 0.25rem; }
+        .page-sub { font-size: 14px; color: #64748b; margin-bottom: 2rem; }
+
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 2rem; }
+        .stat-card {
+            background: #fff; border: 2px solid #e2e8f0; border-radius: 16px; padding: 1.5rem;
+        }
+        .stat-card .slbl { font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .stat-card .sval { font-size: 2.5rem; font-weight: 800; color: #0f172a; line-height: 1; }
+        .stat-card .sval.green { color: #166534; }
+        .stat-card .sval.amber { color: #b45309; }
+        .stat-card .sval.red { color: #dc2626; }
+        .stat-card .sval.blue { color: #1d4ed8; }
+
+        .section { margin-bottom: 2rem; display: none; }
+        .section.show { display: block; }
+        .section-header {
+            display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;
+        }
+        .section-title { font-size: 18px; font-weight: 700; }
+
+        .card { background: #fff; border: 2px solid #e2e8f0; border-radius: 16px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            text-align: left; padding: 12px 16px; font-size: 12px; font-weight: 700;
+            color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;
+            background: #f8fafc; border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            padding: 14px 16px; font-size: 15px; font-weight: 500; color: #0f172a;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f8fafc; }
+
+        .btn {
+            font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+            padding: 8px 14px; border-radius: 8px; border: none; cursor: pointer;
+            transition: all 0.15s; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .btn-green { background: #16a34a; color: #fff; }
+        .btn-green:hover { background: #15803d; }
+        .btn-red { background: #fef2f2; color: #dc2626; border: 2px solid #fca5a5; }
+        .btn-red:hover { background: #fee2e2; }
+        .btn-blue { background: #eff6ff; color: #1d4ed8; border: 2px solid #bfdbfe; }
+        .btn-blue:hover { background: #dbeafe; }
+        .btn-gray { background: #f1f5f9; color: #374151; border: 2px solid #e2e8f0; }
+        .btn-gray:hover { background: #e2e8f0; }
+        .btn-amber { background: #fffbeb; color: #b45309; border: 2px solid #fcd34d; }
+        .btn-amber:hover { background: #fef3c7; }
+        .btn-sm { font-size: 12px; padding: 5px 10px; }
+        .btn-lg { font-size: 16px; padding: 14px 24px; border-radius: 12px; font-weight: 700; }
+
+        .status-pill {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 13px; font-weight: 600;
+        }
+        .s-WAITING { background: #dbeafe; color: #1d4ed8; }
+        .s-CALLED { background: #fef3c7; color: #b45309; }
+        .s-IN_PROGRESS { background: #dbeafe; color: #1d4ed8; }
+        .s-COMPLETED { background: #dcfce7; color: #166534; }
+        .s-NO_SHOW { background: #fee2e2; color: #dc2626; }
+        .s-CANCELLED { background: #f1f5f9; color: #64748b; }
+        .s-REGISTERED { background: #f3e8ff; color: #7c3aed; }
+        .s-active { background: #dcfce7; color: #166534; }
+        .s-inactive { background: #f1f5f9; color: #64748b; }
+
+        .ticket-num { font-weight: 700; color: #166534; font-variant-numeric: tabular-nums; }
+        .emerg-tag {
+            font-size: 11px; font-weight: 700; background: #fef2f2; color: #dc2626;
+            padding: 2px 8px; border-radius: 6px; letter-spacing: 0.5px;
+        }
+        .capacity-bar { height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; min-width: 80px; }
+        .capacity-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+        .capacity-fill.ok { background: #16a34a; }
+        .capacity-fill.warn { background: #f59e0b; }
+        .capacity-fill.danger { background: #dc2626; }
+
+        .empty-row td { text-align: center; color: #94a3b8; padding: 2rem; font-size: 15px; }
+
+        .alert-bar {
+            padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 600;
+            margin-bottom: 16px; display: none;
+        }
+        .alert-bar.show { display: block; }
+        .alert-success { background: #f0fdf4; color: #166534; border: 2px solid #86efac; }
+        .alert-danger { background: #fef2f2; color: #dc2626; border: 2px solid #fca5a5; }
+
+        .action-group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+            display: none; align-items: center; justify-content: center; z-index: 200;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: #fff; border-radius: 20px; width: 90%; max-width: 480px;
+            padding: 2rem; box-shadow: 0 20px 60px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;
+        }
+        .modal-title { font-size: 20px; font-weight: 700; margin-bottom: 1.5rem; }
+        label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        input, select {
+            width: 100%; font-family: 'Inter', sans-serif; font-size: 15px;
+            background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 10px;
+            color: #0f172a; padding: 11px 14px; outline: none; margin-bottom: 14px;
+            appearance: none;
+        }
+        input:focus, select:focus { border-color: #16a34a; background: #fff; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+        .modal-actions .btn { flex: 1; padding: 12px; font-size: 15px; }
+
+        .search-box { display: flex; gap: 12px; margin-bottom: 1rem; align-items: center; }
+        .search-box input { flex: 1; margin-bottom: 0; max-width: 320px; }
+
+        /* QUEUE CONTROL BAR */
+        .dept-queue-section { margin-bottom: 2rem; }
+        .dept-queue-header {
+            background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 16px;
+            padding: 1.25rem 1.5rem; margin-bottom: 0.75rem;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .dept-queue-header .dq-name { font-size: 17px; font-weight: 700; }
+        .dept-queue-header .dq-serving {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .dq-serving-label { font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .dq-serving-num { font-size: 1.5rem; font-weight: 800; color: #166534; font-variant-numeric: tabular-nums; }
+        .dq-serving-none { font-size: 15px; color: #94a3b8; font-weight: 500; }
+        .dq-waiting-badge {
+            font-size: 13px; font-weight: 700; background: #dbeafe; color: #1d4ed8;
+            padding: 5px 14px; border-radius: 20px;
+        }
+
+        .filter-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 1.5rem; }
+        .filter-bar select {
+            width: auto; margin: 0; font-size: 14px; min-width: 200px;
+        }
+        .filter-bar button { white-space: nowrap; }
+    </style>
+</head>
+<body>
+<nav>
+    <div class="nav-brand">OPD Queue<span class="nav-badge">Admin</span></div>
+    <div class="nav-links">
+        <a href="/" class="nav-link">Reception</a>
+    </div>
+</nav>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-title">Dashboard</div>
+        <button class="sidebar-item active" data-tab="overview"><span class="sidebar-ico">&#9681;</span> Overview</button>
+        <a href="/display/1" target="_blank" class="sidebar-item" style="text-decoration:none"><span class="sidebar-ico">&#9633;</span> Display Board &#8599;</a>
+        <div class="sidebar-title">Management</div>
+        <button class="sidebar-item" data-tab="departments"><span class="sidebar-ico">&#9776;</span> Departments</button>
+        <button class="sidebar-item" data-tab="doctors"><span class="sidebar-ico">&#9764;</span> Doctors</button>
+        <button class="sidebar-item" data-tab="staff"><span class="sidebar-ico">&#9787;</span> Staff</button>
+        <div class="sidebar-title">Queue</div>
+        <button class="sidebar-item" data-tab="queue"><span class="sidebar-ico">&#9878;</span> Queue Control</button>
+        <div class="sidebar-title">Records</div>
+        <button class="sidebar-item" data-tab="patients"><span class="sidebar-ico">&#9788;</span> Patients</button>
+    </aside>
+
+    <main class="main">
+        <div id="alertBar" class="alert-bar"></div>
+
+        <!-- ======== OVERVIEW ======== -->
+        <section class="section show" id="sec-overview">
+            <div class="page-title">Dashboard Overview</div>
+            <div class="page-sub">Real-time queue status across all departments</div>
+            <div class="stats-row">
+                <div class="stat-card"><div class="slbl">Total Waiting</div><div class="sval green" id="ovWaiting">—</div></div>
+                <div class="stat-card"><div class="slbl">Now Serving</div><div class="sval blue" id="ovCalled">—</div></div>
+                <div class="stat-card"><div class="slbl">Completed Today</div><div class="sval" id="ovCompleted">—</div></div>
+                <div class="stat-card"><div class="slbl">No Shows</div><div class="sval red" id="ovNoShow">—</div></div>
+            </div>
+            <div class="section-title" style="margin-bottom:1rem">Department Queue Status</div>
+            <div class="card">
+                <table>
+                    <thead><tr><th>Department</th><th>Now Serving</th><th>Waiting</th><th>Capacity</th><th>Status</th><th>Quick Actions</th></tr></thead>
+                    <tbody id="ovDeptBody"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ======== DEPARTMENTS ======== -->
+        <section class="section" id="sec-departments">
+            <div class="section-header">
+                <div class="section-title">Manage Departments</div>
+                <button class="btn btn-green" onclick="openDeptModal()">+ Add Department</button>
+            </div>
+            <div class="card">
+                <table>
+                    <thead><tr><th>Name</th><th>Type</th><th>Queue</th><th>Capacity</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="deptTableBody"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ======== DOCTORS ======== -->
+        <section class="section" id="sec-doctors">
+            <div class="section-header">
+                <div class="section-title">Manage Doctors</div>
+                <button class="btn btn-green" onclick="openDoctorModal()">+ Add Doctor</button>
+            </div>
+            <div class="card">
+                <table>
+                    <thead><tr><th>Name</th><th>Specialization</th><th>Room</th><th>Department</th><th>Available</th><th>Actions</th></tr></thead>
+                    <tbody id="doctorTableBody"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ======== STAFF ======== -->
+        <section class="section" id="sec-staff">
+            <div class="section-header">
+                <div class="section-title">Manage Staff</div>
+                <button class="btn btn-green" onclick="openStaffModal()">+ Add Staff</button>
+            </div>
+            <div class="card">
+                <table>
+                    <thead><tr><th>Name</th><th>Role</th><th>Username</th><th>Department</th><th>Actions</th></tr></thead>
+                    <tbody id="staffTableBody"><tr class="empty-row"><td colspan="5">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ======== QUEUE CONTROL ======== -->
+        <section class="section" id="sec-queue">
+            <div class="page-title">Queue Control</div>
+            <div class="page-sub">Call patients, complete consultations, and manage the queue</div>
+
+            <div class="filter-bar">
+                <select id="queueDeptFilter" onchange="loadQueue()">
+                    <option value="">All Departments</option>
+                </select>
+                <button class="btn btn-gray" onclick="loadAll()">Refresh</button>
+            </div>
+
+            <div id="queueDeptSections"></div>
+        </section>
+
+        <!-- ======== PATIENTS ======== -->
+        <section class="section" id="sec-patients">
+            <div class="section-header">
+                <div class="section-title">Registered Patients</div>
+            </div>
+            <div class="search-box">
+                <input type="text" id="patientSearch" placeholder="Search by NIC or name..." oninput="filterPatients()">
+            </div>
+            <div class="card">
+                <table>
+                    <thead><tr><th>NIC</th><th>Full Name</th><th>Gender</th><th>Contact</th><th>Type</th><th>Registered</th></tr></thead>
+                    <tbody id="patientTableBody"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- === MODALS === -->
+<div class="modal-overlay" id="deptModal">
+    <div class="modal">
+        <div class="modal-title" id="deptModalTitle">Add Department</div>
+        <input type="hidden" id="deptEditId">
+        <label>Department Name</label>
+        <input type="text" id="deptName" placeholder="e.g. OPD General">
+        <label>Department Type</label>
+        <select id="deptType">
+            <option value="OPD_GENERAL">OPD General</option>
+            <option value="CARDIOLOGY">Cardiology</option>
+            <option value="PEDIATRICS">Pediatrics</option>
+            <option value="ORTHOPEDICS">Orthopedics</option>
+            <option value="NEUROLOGY">Neurology</option>
+            <option value="GYNECOLOGY">Gynecology</option>
+        </select>
+        <label>Max Queue Capacity</label>
+        <input type="number" id="deptCapacity" value="100" min="1">
+        <div class="modal-actions">
+            <button class="btn btn-gray" onclick="closeDeptModal()">Cancel</button>
+            <button class="btn btn-green" onclick="saveDept()">Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="doctorModal">
+    <div class="modal">
+        <div class="modal-title" id="doctorModalTitle">Add Doctor</div>
+        <input type="hidden" id="doctorEditId">
+        <label>Full Name</label>
+        <input type="text" id="doctorName" placeholder="Dr. full name">
+        <label>Specialization</label>
+        <input type="text" id="doctorSpecialization" placeholder="e.g. Cardiologist">
+        <label>Room Number</label>
+        <input type="text" id="doctorRoom" placeholder="e.g. Room 101">
+        <label>Department</label>
+        <select id="doctorDept"></select>
+        <div class="modal-actions">
+            <button class="btn btn-gray" onclick="closeDoctorModal()">Cancel</button>
+            <button class="btn btn-green" onclick="saveDoctor()">Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="staffModal">
+    <div class="modal">
+        <div class="modal-title" id="staffModalTitle">Add Staff</div>
+        <input type="hidden" id="staffEditId">
+        <label>Full Name</label>
+        <input type="text" id="staffName" placeholder="Staff full name">
+        <label>Role</label>
+        <select id="staffRole">
+            <option value="RECEPTIONIST">Receptionist</option>
+            <option value="NURSE">Nurse</option>
+            <option value="DOCTOR">Doctor</option>
+            <option value="ADMIN">Admin</option>
+        </select>
+        <label>Username</label>
+        <input type="text" id="staffUsername" placeholder="Login username">
+        <label>Password</label>
+        <input type="password" id="staffPassword" placeholder="Enter password">
+        <label>Department</label>
+        <select id="staffDept"></select>
+        <div class="modal-actions">
+            <button class="btn btn-gray" onclick="closeStaffModal()">Cancel</button>
+            <button class="btn btn-green" onclick="saveStaff()">Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let allDepts = [], allPatients = [];
+
+    // TAB SWITCHING
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.addEventListener('click', () => {
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('show'));
+            document.getElementById('sec-' + item.dataset.tab).classList.add('show');
+            switch (item.dataset.tab) {
+                case 'overview': loadAll(); break;
+                case 'departments': loadDepts(); break;
+                case 'doctors': loadDoctors(); break;
+                case 'staff': loadStaff(); break;
+                case 'queue': loadQueue(); break;
+                case 'patients': loadPatients(); break;
+            }
+        });
+    });
+
+    // ======== LOAD ========
+    async function loadAll() {
+        await Promise.all([loadDepts(), loadStats()]);
+    }
+
+    async function loadStats() {
+        try {
+            const tickets = await fetch('/api/admin/tickets/all').then(r => r.json());
+            document.getElementById('ovWaiting').textContent = tickets.filter(t => t.status === 'WAITING' || t.status === 'REGISTERED').length;
+            document.getElementById('ovCalled').textContent = tickets.filter(t => t.status === 'CALLED' || t.status === 'IN_PROGRESS').length;
+            document.getElementById('ovCompleted').textContent = tickets.filter(t => t.status === 'COMPLETED').length;
+            document.getElementById('ovNoShow').textContent = tickets.filter(t => t.status === 'NO_SHOW').length;
+        } catch {}
+    }
+
+    async function loadDepts() {
+        try {
+            const depts = await fetch('/api/departments/admin/all').then(r => r.json());
+            allDepts = depts;
+            const sel = document.getElementById('queueDeptFilter');
+            sel.innerHTML = '<option value="">All Departments</option>' + depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+            document.getElementById('doctorDept').innerHTML = depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+            document.getElementById('staffDept').innerHTML = depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+
+            // Overview dept rows
+            const ovBody = document.getElementById('ovDeptBody');
+            ovBody.innerHTML = depts.length ? depts.map(d => {
+                const pct = d.maxQueueCapacity > 0 ? Math.round((d.currentQueueCount / d.maxQueueCapacity) * 100) : 0;
+                const fc = pct >= 90 ? 'danger' : pct >= 70 ? 'warn' : 'ok';
+                return `<tr>
+            <td><strong>${d.name}</strong></td>
+            <td><span class="dq-serving-none">—</span></td>
+            <td>${d.currentQueueCount}</td>
+            <td><div class="capacity-bar"><div class="capacity-fill ${fc}" style="width:${pct}%"></div></div><span style="font-size:12px;color:#94a3b8">${d.maxQueueCapacity}</span></td>
+            <td><span class="status-pill ${d.active ? 's-active' : 's-inactive'}">${d.active ? 'Active' : 'Inactive'}</span></td>
+            <td style="display:flex;gap:6px">
+              <button class="btn btn-green btn-sm" onclick="callNextDept(${d.id})">Call Next</button>
+              <a href="/display/${d.id}" target="_blank" class="btn btn-gray btn-sm">Board</a>
+            </td>
+          </tr>`;
+            }).join('') : '<tr class="empty-row"><td colspan="6">No departments</td></tr>';
+
+            // Department management table
+            const deptBody = document.getElementById('deptTableBody');
+            deptBody.innerHTML = depts.length ? depts.map(d => {
+                const pct = d.maxQueueCapacity > 0 ? Math.round((d.currentQueueCount / d.maxQueueCapacity) * 100) : 0;
+                const fc = pct >= 90 ? 'danger' : pct >= 70 ? 'warn' : 'ok';
+                return `<tr>
+            <td><strong>${d.name}</strong></td>
+            <td>${(d.departmentType || '').replace(/_/g, ' ')}</td>
+            <td>${d.currentQueueCount}</td>
+            <td><div class="capacity-bar"><div class="capacity-fill ${fc}" style="width:${pct}%"></div></div><span style="font-size:12px;color:#94a3b8">${d.maxQueueCapacity}</span></td>
+            <td><span class="status-pill ${d.active ? 's-active' : 's-inactive'}">${d.active ? 'Active' : 'Inactive'}</span></td>
+            <td>
+              <div class="action-group">
+                <button class="btn btn-blue btn-sm" onclick="editDept(${d.id})">Edit</button>
+                <button class="btn ${d.active ? 'btn-amber' : 'btn-green'} btn-sm" onclick="toggleDeptActive(${d.id}, ${!d.active})">${d.active ? 'Disable' : 'Enable'}</button>
+                <button class="btn btn-red btn-sm" onclick="resetQueue(${d.id})">Reset Q</button>
+                <button class="btn btn-red btn-sm" onclick="deleteDept(${d.id})">Del</button>
+              </div>
+            </td>
+          </tr>`;
+            }).join('') : '<tr class="empty-row"><td colspan="6">No departments</td></tr>';
+        } catch {}
+    }
+
+    async function loadQueue() {
+        const deptId = document.getElementById('queueDeptFilter').value;
+        try {
+            let depts = allDepts;
+            if (deptId) { depts = allDepts.filter(d => d.id == deptId); }
+            if (!depts.length) depts = allDepts;
+
+            const container = document.getElementById('queueDeptSections');
+
+            let html = '';
+            for (const d of depts) {
+                const url = `/api/admin/tickets/department/${d.id}`;
+                const tickets = await fetch(url).then(r => r.json());
+
+                // find currently CALLED ticket for this dept
+                const callUrl = `/api/admin/tickets/all`;
+                let calledTicket = null;
+                try {
+                    const allTix = await fetch(callUrl).then(r => r.json());
+                    calledTicket = allTix.find(t => t.department?.id === d.id && (t.status === 'CALLED' || t.status === 'IN_PROGRESS'));
+                } catch {}
+
+                html += `<div class="dept-queue-section">
+          <div class="dept-queue-header">
+            <div>
+              <div class="dq-name">${d.name}</div>
+              <div style="font-size:13px;color:#94a3b8;margin-top:2px">${(d.departmentType || '').replace(/_/g, ' ')}</div>
+            </div>
+            <div class="dq-serving">
+              <div style="text-align:right">
+                <div class="dq-serving-label">Now Serving</div>
+                ${calledTicket
+                  ? `<div class="dq-serving-num">${calledTicket.ticketNumber}</div><div style="font-size:12px;color:#94a3b8">${calledTicket.patient?.fullName || '—'}</div>`
+                  : `<div class="dq-serving-none">— No one —</div>`
+                }
+              </div>
+              <div style="margin:0 1.5rem;width:1px;height:40px;background:#e2e8f0"></div>
+              <div>
+                <div class="dq-serving-label">Waiting</div>
+                <div class="dq-waiting-badge">${tickets.length} patient(s)</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-lg btn-green" onclick="callNextDept(${d.id})" ${!tickets.length ? 'disabled' : ''}>
+                Call Next Patient
+              </button>
+              ${calledTicket ? `<button class="btn btn-lg btn-blue" onclick="completeTicket('${calledTicket.ticketNumber}')">Complete</button>` : ''}
+            </div>
+          </div>`;
+
+                if (tickets.length) {
+                    html += `<div class="card"><table>
+              <thead><tr><th>#</th><th>Ticket</th><th>Patient</th><th>Position</th><th>Est. Wait</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>`;
+                    tickets.forEach((t, i) => {
+                        const emerg = t.emergency || t.isEmergency;
+                        const actionBtns = [
+                            t.status === 'CALLED' ? `<button class="btn btn-blue btn-sm" onclick="completeTicket('${t.ticketNumber}')">Complete</button>` : '',
+                            t.status === 'CALLED' || t.status === 'WAITING' ? `<button class="btn btn-red btn-sm" onclick="noShowTicket('${t.ticketNumber}')">No Show</button>` : '',
+                        ].filter(Boolean).join('');
+                        html += `<tr>
+                  <td style="color:#94a3b8;font-size:13px">${i + 1}</td>
+                  <td><span class="ticket-num">${t.ticketNumber}</span>${emerg ? '<span class="emerg-tag" style="margin-left:6px">EMG</span>' : ''}</td>
+                  <td>${t.patient?.fullName || '—'}</td>
+                  <td>#${t.queuePosition}</td>
+                  <td>${t.estimatedWaitMinutes} min</td>
+                  <td><span class="status-pill s-${t.status}">${t.status.replace(/_/g, ' ')}</span></td>
+                  <td><div class="action-group">${actionBtns || '<span style="color:#94a3b8;font-size:13px">—</span>'}</div></td>
+                </tr>`;
+                    });
+                    html += `</tbody></table></div>`;
+                } else {
+                    html += `<div class="card"><div class="empty-row" style="text-align:center;padding:1.5rem;color:#94a3b8">No patients waiting</div></div>`;
+                }
+                html += `</div>`;
+            }
+
+            container.innerHTML = html || '<div style="text-align:center;color:#94a3b8;padding:3rem">No departments available</div>';
+        } catch (e) {
+            document.getElementById('queueDeptSections').innerHTML = '<div style="text-align:center;color:#dc2626;padding:3rem">Failed to load queue data</div>';
+        }
+    }
+
+    async function loadDoctors() {
+        try {
+            const doctors = await fetch('/api/doctors').then(r => r.json());
+            const tbody = document.getElementById('doctorTableBody');
+            tbody.innerHTML = doctors.length ? doctors.map(d => `<tr>
+          <td><strong>${d.fullName}</strong></td>
+          <td>${d.specialization}</td>
+          <td>${d.roomNumber}</td>
+          <td>${d.department?.name || '—'}</td>
+          <td><span style="color:${d.available ? '#16a34a' : '#94a3b8'};font-weight:600">&#9679; ${d.available ? 'Available' : 'Unavailable'}</span></td>
+          <td>
+            <div class="action-group">
+              <button class="btn btn-blue btn-sm" onclick="editDoctor(${d.id})">Edit</button>
+              <button class="btn ${d.available ? 'btn-amber' : 'btn-green'} btn-sm" onclick="toggleDoctorAvail(${d.id}, ${!d.available})">${d.available ? 'Set Unavail' : 'Set Avail'}</button>
+              <button class="btn btn-red btn-sm" onclick="deleteDoctor(${d.id})">Del</button>
+            </div>
+          </td>
+        </tr>`).join('') : '<tr class="empty-row"><td colspan="6">No doctors</td></tr>';
+        } catch {}
+    }
+
+    async function loadStaff() {
+        try {
+            const staff = await fetch('/api/staff').then(r => r.json());
+            const tbody = document.getElementById('staffTableBody');
+            tbody.innerHTML = staff.length ? staff.map(s => `<tr>
+          <td><strong>${s.fullName}</strong></td>
+          <td><span class="status-pill s-WAITING">${s.role ? s.role.replace(/_/g, ' ') : '—'}</span></td>
+          <td>${s.username}</td>
+          <td>${s.department?.name || '—'}</td>
+          <td>
+            <div class="action-group">
+              <button class="btn btn-blue btn-sm" onclick="editStaff(${s.id})">Edit</button>
+              <button class="btn btn-red btn-sm" onclick="deleteStaff(${s.id})">Del</button>
+            </div>
+          </td>
+        </tr>`).join('') : '<tr class="empty-row"><td colspan="5">No staff</td></tr>';
+        } catch {}
+    }
+
+    async function loadPatients() {
+        try {
+            allPatients = await fetch('/api/admin/patients').then(r => r.json());
+            renderPatientTable(allPatients);
+        } catch {}
+    }
+
+    function filterPatients() {
+        const q = document.getElementById('patientSearch').value.toLowerCase();
+        const filtered = allPatients.filter(p => (p.nic || '').toLowerCase().includes(q) || (p.fullName || '').toLowerCase().includes(q));
+        renderPatientTable(filtered);
+    }
+
+    function renderPatientTable(patients) {
+        const tbody = document.getElementById('patientTableBody');
+        tbody.innerHTML = patients.length ? patients.map(p => `<tr>
+      <td style="font-variant-numeric:tabular-nums;font-weight:600">${p.nic}</td>
+      <td>${p.fullName}</td>
+      <td>${p.gender || '—'}</td>
+      <td>${p.contactNumber}</td>
+      <td><span class="status-pill ${p.patientType === 'WALK_IN' ? 's-WAITING' : 's-COMPLETED'}">${(p.patientType || '').replace(/_/g, ' ') || '—'}</span></td>
+      <td style="color:#94a3b8;font-size:13px">${p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '—'}</td>
+    </tr>`).join('') : '<tr class="empty-row"><td colspan="6">No patients found</td></tr>';
+    }
+
+    // ======== DEPARTMENT CRUD ========
+    function openDeptModal(dept) {
+        document.getElementById('deptEditId').value = dept ? dept.id : '';
+        document.getElementById('deptName').value = dept ? dept.name : '';
+        document.getElementById('deptType').value = dept ? dept.departmentType : 'OPD_GENERAL';
+        document.getElementById('deptCapacity').value = dept ? dept.maxQueueCapacity : 100;
+        document.getElementById('deptModalTitle').textContent = dept ? 'Edit Department' : 'Add Department';
+        document.getElementById('deptModal').classList.add('show');
+    }
+    function closeDeptModal() { document.getElementById('deptModal').classList.remove('show'); }
+    function editDept(id) { const d = allDepts.find(x => x.id === id); if (d) openDeptModal(d); }
+
+    async function saveDept() {
+        const id = document.getElementById('deptEditId').value;
+        const name = document.getElementById('deptName').value.trim();
+        const departmentType = document.getElementById('deptType').value;
+        const maxQueueCapacity = parseInt(document.getElementById('deptCapacity').value);
+        if (!name) { showAlert('Department name is required', 'danger'); return; }
+        try {
+            const isEdit = !!id;
+            const url = isEdit ? `/api/departments/${id}` : '/api/departments';
+            const res = await fetch(url, {
+                method: isEdit ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, departmentType, maxQueueCapacity, active: true })
+            });
+            if (!res.ok) throw new Error();
+            closeDeptModal();
+            showAlert(isEdit ? 'Updated' : 'Added', 'success');
+            loadDepts();
+        } catch { showAlert('Save failed', 'danger'); }
+    }
+
+    async function toggleDeptActive(id, active) {
+        const d = allDepts.find(x => x.id === id); if (!d) return;
+        try {
+            const res = await fetch(`/api/departments/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: d.name, departmentType: d.departmentType, maxQueueCapacity: d.maxQueueCapacity, active })
+            });
+            if (!res.ok) throw new Error();
+            showAlert(active ? 'Activated' : 'Deactivated', 'success');
+            loadDepts();
+        } catch { showAlert('Failed', 'danger'); }
+    }
+
+    async function deleteDept(id) {
+        if (!confirm('Delete this department permanently?')) return;
+        try {
+            await fetch(`/api/departments/${id}`, { method: 'DELETE' });
+            showAlert('Deleted', 'success'); loadDepts();
+        } catch { showAlert('Failed', 'danger'); }
+    }
+
+    // ======== DOCTOR CRUD ========
+    async function openDoctorModal(doc) {
+        if (!allDepts.length) await loadDepts();
+        document.getElementById('doctorDept').innerHTML = allDepts.map(d => `<option value="${d.id}" ${doc && doc.department?.id === d.id ? 'selected' : ''}>${d.name}</option>`).join('');
+        document.getElementById('doctorEditId').value = doc ? doc.id : '';
+        document.getElementById('doctorName').value = doc ? doc.fullName : '';
+        document.getElementById('doctorSpecialization').value = doc ? doc.specialization : '';
+        document.getElementById('doctorRoom').value = doc ? doc.roomNumber : '';
+        document.getElementById('doctorModalTitle').textContent = doc ? 'Edit Doctor' : 'Add Doctor';
+        document.getElementById('doctorModal').classList.add('show');
+    }
+    function closeDoctorModal() { document.getElementById('doctorModal').classList.remove('show'); }
+    async function editDoctor(id) { try { const docs = await fetch('/api/doctors').then(r => r.json()); const d = docs.find(x => x.id === id); if (d) openDoctorModal(d); } catch {} }
+
+    async function saveDoctor() {
+        const id = document.getElementById('doctorEditId').value;
+        const fullName = document.getElementById('doctorName').value.trim();
+        const specialization = document.getElementById('doctorSpecialization').value.trim();
+        const roomNumber = document.getElementById('doctorRoom').value.trim();
+        const departmentId = parseInt(document.getElementById('doctorDept').value);
+        if (!fullName || !specialization || !roomNumber) { showAlert('All fields required', 'danger'); return; }
+        try {
+            const isEdit = !!id;
+            const res = await fetch(isEdit ? `/api/doctors/${id}` : '/api/doctors', {
+                method: isEdit ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fullName, specialization, roomNumber, departmentId })
+            });
+            if (!res.ok) throw new Error();
+            closeDoctorModal();
+            showAlert(isEdit ? 'Updated' : 'Added', 'success');
+            loadDoctors();
+        } catch { showAlert('Save failed', 'danger'); }
+    }
+
+    async function toggleDoctorAvail(id, avail) {
+        try {
+            await fetch(`/api/doctors/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isAvailable: avail }) });
+            showAlert(avail ? 'Available' : 'Unavailable', 'success'); loadDoctors();
+        } catch { showAlert('Failed', 'danger'); }
+    }
+
+    async function deleteDoctor(id) {
+        if (!confirm('Delete this doctor?')) return;
+        try { await fetch(`/api/doctors/${id}`, { method: 'DELETE' }); showAlert('Deleted', 'success'); loadDoctors(); } catch { showAlert('Failed', 'danger'); }
+    }
+
+    // ======== STAFF CRUD ========
+    async function openStaffModal(sta) {
+        if (!allDepts.length) await loadDepts();
+        document.getElementById('staffDept').innerHTML = allDepts.map(d => `<option value="${d.id}" ${sta && sta.department?.id === d.id ? 'selected' : ''}>${d.name}</option>`).join('');
+        document.getElementById('staffEditId').value = sta ? sta.id : '';
+        document.getElementById('staffName').value = sta ? sta.fullName : '';
+        document.getElementById('staffRole').value = sta ? sta.role : 'RECEPTIONIST';
+        document.getElementById('staffUsername').value = sta ? sta.username : '';
+        document.getElementById('staffPassword').value = '';
+        document.getElementById('staffModalTitle').textContent = sta ? 'Edit Staff' : 'Add Staff';
+        document.getElementById('staffModal').classList.add('show');
+    }
+    function closeStaffModal() { document.getElementById('staffModal').classList.remove('show'); }
+    async function editStaff(id) { try { const s = await fetch('/api/staff').then(r => r.json()).then(arr => arr.find(x => x.id === id)); if (s) openStaffModal(s); } catch {} }
+
+    async function saveStaff() {
+        const id = document.getElementById('staffEditId').value;
+        const fullName = document.getElementById('staffName').value.trim();
+        const role = document.getElementById('staffRole').value;
+        const username = document.getElementById('staffUsername').value.trim();
+        const password = document.getElementById('staffPassword').value;
+        const departmentId = parseInt(document.getElementById('staffDept').value);
+        if (!fullName || !username || (!id && !password)) { showAlert('All fields required', 'danger'); return; }
+        try {
+            const isEdit = !!id;
+            const body = { fullName, role, username, departmentId };
+            if (password) body.password = password;
+            const res = await fetch(isEdit ? `/api/staff/${id}` : '/api/staff', {
+                method: isEdit ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res.ok) throw new Error();
+            closeStaffModal();
+            showAlert(isEdit ? 'Updated' : 'Added', 'success'); loadStaff();
+        } catch { showAlert('Save failed', 'danger'); }
+    }
+
+    async function deleteStaff(id) {
+        if (!confirm('Delete this staff member?')) return;
+        try { await fetch(`/api/staff/${id}`, { method: 'DELETE' }); showAlert('Deleted', 'success'); loadStaff(); } catch { showAlert('Failed', 'danger'); }
+    }
+
+    // ======== QUEUE OPS ========
+    async function callNextDept(deptId) {
+        try {
+            const res = await fetch(`/api/queue/call-next/${deptId}`, { method: 'POST' });
+            if (!res.ok) { const e = await res.json(); throw new Error(e.message); }
+            const t = await res.json();
+            showAlert(`Called: ${t.ticketNumber}`, 'success');
+            loadQueue(); loadDepts(); loadStats();
+        } catch (e) { showAlert(e.message || 'No patients waiting', 'danger'); }
+    }
+
+    async function completeTicket(tn) {
+        try {
+            await fetch(`/api/queue/complete/${tn}`, { method: 'POST' });
+            showAlert(`Completed ${tn}`, 'success');
+            loadQueue(); loadDepts(); loadStats();
+        } catch { showAlert('Failed', 'danger'); }
+    }
+
+    async function noShowTicket(tn) {
+        try {
+            await fetch(`/api/queue/no-show/${tn}`, { method: 'POST' });
+            showAlert(`No-show: ${tn}`, 'success');
+            loadQueue(); loadDepts(); loadStats();
+        } catch { showAlert('Failed', 'danger'); }
+    }
+
+    async function resetQueue(deptId) {
+        if (!confirm('Reset this queue? All waiting tickets will be cancelled.')) return;
+        try {
+            await fetch(`/api/queue/reset/${deptId}`, { method: 'POST' });
+            showAlert('Queue reset', 'success'); loadAll();
+        } catch { showAlert('Failed', 'danger'); }
+    }
+
+    function showAlert(msg, type) {
+        const el = document.getElementById('alertBar');
+        el.textContent = msg;
+        el.className = 'alert-bar show alert-' + type;
+        setTimeout(() => el.classList.remove('show'), 4000);
+    }
+
+    loadAll();
+    setInterval(() => loadAll(), 30000);
+</script>
+</body>
+</html>

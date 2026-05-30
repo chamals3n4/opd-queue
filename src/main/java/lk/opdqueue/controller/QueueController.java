@@ -49,4 +49,10 @@ public class QueueController {
     public ResponseEntity<List<QueueTicket>> departmentQueue(@PathVariable Long departmentId) {
         return ResponseEntity.ok(queueService.getDepartmentQueue(departmentId));
     }
+
+    @PostMapping("/reset/{departmentId}")
+    public ResponseEntity<Void> resetQueue(@PathVariable Long departmentId) {
+        queueService.resetDepartmentQueue(departmentId);
+        return ResponseEntity.ok().build();
+    }
 }

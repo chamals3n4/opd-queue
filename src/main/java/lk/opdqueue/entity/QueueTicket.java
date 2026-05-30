@@ -52,7 +52,6 @@ public class QueueTicket {
     @PrePersist
     protected void onCreate() {
         issuedAt = LocalDateTime.now();
-        status = TicketStatus.REGISTERED;
     }
 
     public UUID getId() { return id; }

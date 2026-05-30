@@ -2,115 +2,319 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Queue Status — OPD Queue</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Your Queue Status — OPD Queue</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --green-50: #f0fdf4;
-            --green-100: #dcfce7;
-            --green-600: #16a34a;
-            --green-700: #15803d;
-            --green-800: #166534;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0fdf4;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1.5rem 1rem 3rem;
         }
-        body { background: var(--green-50); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .status-card { background: #fff; border-radius: 20px; box-shadow: 0 4px 24px rgba(0,0,0,.08); max-width: 420px; width: 100%; overflow: hidden; }
-        .status-header { background: var(--green-700); color: #fff; padding: 24px; text-align: center; }
-        .status-header h5 { opacity: .85; font-size: .85rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
-        .ticket-number { font-size: 2.75rem; font-weight: 800; letter-spacing: 2px; }
-        .status-body { padding: 28px; }
-        .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #f3f4f6; }
-        .stat-row:last-child { border-bottom: none; }
-        .stat-label { color: #6b7280; font-size: .9rem; font-weight: 500; }
-        .stat-value { font-weight: 700; font-size: 1.1rem; color: #1f2937; }
-        .position-badge { background: var(--green-100); color: var(--green-800); padding: 4px 14px; border-radius: 20px; font-weight: 700; font-size: 1.2rem; }
-        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: .8rem; font-weight: 700; display: inline-block; }
+        .brand {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        .brand-name { font-size: 16px; font-weight: 700; color: #166534; letter-spacing: -0.3px; }
+        .brand-sub { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+        .card {
+            background: #fff;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 420px;
+            overflow: hidden;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+        }
+        .card-header {
+            background: #166534;
+            padding: 2.5rem 2rem 2rem;
+            text-align: center;
+        }
+        .card-header.emergency { background: #991b1b; }
+        .header-label {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.55);
+            margin-bottom: 12px;
+        }
+        .ticket-num {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 2px;
+            line-height: 1;
+            margin-bottom: 16px;
+            font-variant-numeric: tabular-nums;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+        .bdot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
         .status-WAITING { background: #dbeafe; color: #1d4ed8; }
+        .status-WAITING .bdot { background: #1d4ed8; }
+        .status-REGISTERED { background: #f3e8ff; color: #7c3aed; }
+        .status-REGISTERED .bdot { background: #7c3aed; }
         .status-CALLED { background: #fef3c7; color: #b45309; animation: pulse 1.5s infinite; }
+        .status-CALLED .bdot { background: #b45309; }
         .status-IN_PROGRESS { background: #dbeafe; color: #1d4ed8; }
+        .status-IN_PROGRESS .bdot { background: #1d4ed8; }
         .status-COMPLETED { background: #dcfce7; color: #166534; }
-        .status-NO_SHOW { background: #fee2e2; color: #991b1b; }
-        .status-CANCELLED { background: #f3f4f6; color: #6b7280; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
-        .refresh-time { font-size: .75rem; color: #9ca3af; text-align: center; margin-top: 16px; }
+        .status-COMPLETED .bdot { background: #166534; }
+        .status-NO_SHOW { background: #fee2e2; color: #dc2626; }
+        .status-NO_SHOW .bdot { background: #dc2626; }
+        .status-CANCELLED { background: #f1f5f9; color: #64748b; }
+        .status-CANCELLED .bdot { background: #64748b; }
+        @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.6} }
+
+        .called-banner {
+            display: none;
+            background: #fffbeb;
+            border-bottom: 2px solid #fcd34d;
+            padding: 14px 20px;
+            text-align: center;
+        }
+        .called-banner.show { display: block; }
+        .called-title { font-size: 18px; font-weight: 800; color: #b45309; }
+        .called-sub { font-size: 14px; color: #92400e; margin-top: 4px; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+        .stat {
+            padding: 1.5rem;
+            border-right: 2px solid #f1f5f9;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .stat:nth-child(even) { border-right: none; }
+        .stat.full { grid-column: 1 / -1; border-right: none; }
+        .stat-label {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+        .stat-value.green { color: #166534; }
+        .stat-value.amber { color: #b45309; }
+        .stat-value.text { font-size: 1.1rem; font-weight: 700; }
+
+        .progress-section {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .progress-top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+        }
+        .prog-bg {
+            height: 10px;
+            background: #f1f5f9;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .prog-fill {
+            height: 100%;
+            background: #16a34a;
+            border-radius: 5px;
+            transition: width 0.6s ease;
+        }
+        .prog-fill.complete { background: #94a3b8; }
+
+        .dept-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.5rem;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        .dept-lbl { font-size: 13px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .dept-val { font-size: 15px; font-weight: 700; color: #0f172a; }
+
+        .card-footer {
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .live-ind {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .live-dot {
+            width: 8px; height: 8px;
+            background: #16a34a;
+            border-radius: 50%;
+            animation: livepulse 2s infinite;
+        }
+        @keyframes livepulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+        .upd-time { font-size: 12px; color: #94a3b8; font-weight: 500; }
+
+        .connection-lost {
+            background: #fee2e2;
+            border-bottom: 2px solid #fca5a5;
+            padding: 8px 20px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #dc2626;
+            display: none;
+        }
+        .connection-lost.show { display: block; }
     </style>
 </head>
 <body>
+<div class="brand">
+    <div class="brand-name">OPD Queue</div>
+    <div class="brand-sub">Government Hospital</div>
+</div>
 
-<div class="status-card">
-    <div class="status-header">
-        <h5>Your Queue Status</h5>
-        <div class="ticket-number" id="ticketNumber" th:text="${ticketNumber}">—</div>
+<div class="card">
+    <div class="card-header" id="cardHeader">
+        <div class="header-label">Your Queue Ticket</div>
+        <div class="ticket-num" id="ticketNumber" th:text="${ticketNumber}">OPD-00000000-0000</div>
+        <span class="status-badge status-WAITING" id="statusBadge"><span class="bdot"></span>Waiting</span>
     </div>
-    <div class="status-body">
-        <div class="stat-row">
-            <span class="stat-label"><i class="bi bi-building me-2"></i>Department</span>
-            <span class="stat-value" id="departmentName">—</span>
+
+    <div class="connection-lost" id="connectionLost">Connection lost. Using cached data.</div>
+
+    <div class="called-banner" id="calledBanner">
+        <div class="called-title">Your Turn Is Here!</div>
+        <div class="called-sub">Please proceed to the consultation room</div>
+    </div>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-label">Your Position</div>
+            <div class="stat-value green" id="queuePos">—</div>
         </div>
-        <div class="stat-row">
-            <span class="stat-label"><i class="bi bi-flag me-2"></i>Status</span>
-            <span id="statusBadge">—</span>
+        <div class="stat">
+            <div class="stat-label">People Ahead</div>
+            <div class="stat-value amber" id="peopleAhead">—</div>
         </div>
-        <div class="stat-row">
-            <span class="stat-label"><i class="bi bi-sort-numeric-down me-2"></i>Position</span>
-            <span class="position-badge" id="queuePosition">—</span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label"><i class="bi bi-people me-2"></i>People Ahead</span>
-            <span class="stat-value" id="peopleAhead">—</span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label"><i class="bi bi-clock me-2"></i>Est. Wait Time</span>
-            <span class="stat-value" id="waitTime">—</span>
+        <div class="stat full">
+            <div class="stat-label">Estimated Wait</div>
+            <div class="stat-value text" id="waitTime">—</div>
         </div>
     </div>
-    <div class="refresh-time" id="refreshInfo">Loading...</div>
+
+    <div class="progress-section">
+        <div class="progress-top">
+            <span>Queue Progress</span>
+            <span id="progLabel">—</span>
+        </div>
+        <div class="prog-bg">
+            <div class="prog-fill" id="progFill" style="width:0%"></div>
+        </div>
+    </div>
+
+    <div class="dept-row">
+        <span class="dept-lbl">Department</span>
+        <span class="dept-val" id="deptName">—</span>
+    </div>
+
+    <div class="card-footer">
+        <div class="live-ind"><div class="live-dot"></div>Live updates active</div>
+        <div class="upd-time" id="updTime">—</div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 <script>
     const ticketNumber = document.getElementById('ticketNumber').textContent.trim();
+    let stompClient = null;
 
     function updateUI(data) {
-        document.getElementById('departmentName').textContent = data.departmentName || '—';
-        document.getElementById('queuePosition').textContent = '#' + (data.queuePosition || '—');
+        const status = data.status || 'WAITING';
+        document.getElementById('deptName').textContent = data.departmentName || '—';
+        document.getElementById('queuePos').textContent = data.queuePosition != null ? '#' + data.queuePosition : '—';
         document.getElementById('peopleAhead').textContent = data.peopleAhead != null ? data.peopleAhead : '—';
-        document.getElementById('waitTime').textContent = (data.estimatedWaitMinutes != null ? data.estimatedWaitMinutes + ' min' : '—');
+        document.getElementById('waitTime').textContent = data.estimatedWaitMinutes != null ? data.estimatedWaitMinutes + ' minutes' : '—';
 
         const badge = document.getElementById('statusBadge');
-        if (data.status) {
-            badge.textContent = data.status.replace(/_/g, ' ');
-            badge.className = 'status-badge status-' + data.status;
+        badge.className = 'status-badge status-' + status;
+        badge.innerHTML = `<span class="bdot"></span>${status.replace(/_/g, ' ')}`;
+
+        const called = status === 'CALLED' || status === 'IN_PROGRESS';
+        document.getElementById('calledBanner').classList.toggle('show', called);
+        if (called) {
+            document.getElementById('cardHeader').style.background = '#b45309';
         }
+
+        const completed = status === 'COMPLETED' || status === 'NO_SHOW' || status === 'CANCELLED';
+
+        const ahead = data.peopleAhead || 0;
+        const pos = data.queuePosition || 1;
+        const pct = completed ? 100 : (pos > 0 ? Math.round(((pos - ahead - 1) / Math.max(1, pos)) * 100) : 0);
+        document.getElementById('progFill').style.width = pct + '%';
+        if (completed) document.getElementById('progFill').classList.add('complete');
+        document.getElementById('progLabel').textContent = completed
+            ? 'Completed'
+            : (ahead > 0 ? ahead + ' patient(s) ahead of you' : 'You are next!');
+
+        document.getElementById('updTime').textContent = 'Updated ' + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('connectionLost').classList.remove('show');
     }
 
     async function fetchStatus() {
         try {
             const res = await fetch(`/api/queue/status/${ticketNumber}`);
-            if (!res.ok) throw new Error('Failed to load');
-            const data = await res.json();
-            updateUI(data);
-            document.getElementById('refreshInfo').textContent = 'Updated just now';
-        } catch (e) {
-            document.getElementById('refreshInfo').textContent = 'Could not load status';
-        }
+            if (res.ok) updateUI(await res.json());
+        } catch {}
     }
 
-    // WebSocket for "called" notification
-    const socket = new SockJS('/ws');
-    const stomp = Stomp.over(socket);
-    stomp.connect({}, () => {
-        stomp.subscribe(`/topic/ticket/${ticketNumber}`, msg => {
-            const data = JSON.parse(msg.body);
-            updateUI(data);
+    function connectWebSocket() {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null;
+        stompClient.connect({}, () => {
+            stompClient.subscribe(`/topic/ticket/${ticketNumber}`, msg => {
+                updateUI(JSON.parse(msg.body));
+            });
+        }, () => {
+            document.getElementById('connectionLost').classList.add('show');
+            setTimeout(connectWebSocket, 5000);
         });
-    });
+    }
 
     fetchStatus();
-    setInterval(fetchStatus, 15000);
-</script>
+    connectWebSocket();
 
+    // fallback polling every 20s
+    setInterval(fetchStatus, 20000);
+</script>
 </body>
 </html>

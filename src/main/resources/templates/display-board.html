@@ -3,208 +3,340 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Display Board — OPD Queue</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>OPD Display Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --green-700: #15803d;
-            --green-800: #166534;
-            --green-900: #14532d;
-            --green-50: #f0fdf4;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
         body {
-            background: linear-gradient(160deg, #0f172a 0%, #14532d 100%);
-            color: #fff;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-        .board-container {
+            font-family: 'Inter', sans-serif;
+            background: #f0fdf4;
+            color: #0f172a;
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            padding: 2rem;
         }
-        .board-header {
-            text-align: center;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid rgba(255,255,255,.1);
+        header {
+            background: #166534;
+            padding: 1.25rem 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
         }
-        .board-header .hospital-name {
-            font-size: 1rem;
-            opacity: .7;
-            letter-spacing: 3px;
-            text-transform: uppercase;
+        .hospital { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.65); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+        .dept { font-size: 1.75rem; font-weight: 700; color: #fff; }
+        .header-right { display: flex; align-items: center; gap: 1.5rem; }
+        .dept-select {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.25);
+            border-radius: 10px;
+            padding: 8px 12px;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='white' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 32px;
         }
-        .board-header .dept-name {
-            font-size: 1.8rem;
+        .dept-select option {
+            background: #fff;
+            color: #0f172a;
+            font-weight: 600;
+        }
+        .dept-select:hover { border-color: rgba(255,255,255,0.5); }
+        .dept-select:focus { border-color: #4ade80; background: rgba(255,255,255,0.2); }
+        .live-badge {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.15);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .live-dot {
+            width: 10px; height: 10px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: livepulse 2s infinite;
+        }
+        @keyframes livepulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+        .clock {
+            font-size: 2rem;
             font-weight: 300;
-            margin-top: 4px;
-            letter-spacing: 1px;
+            color: rgba(255,255,255,0.85);
+            letter-spacing: 2px;
+            font-variant-numeric: tabular-nums;
         }
-        .now-serving {
+        main {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        .serving-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            padding: 3rem;
+            border-right: 3px solid #bbf7d0;
+            background: #fff;
+        }
+        .serving-label {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 1.5rem;
+        }
+        .serving-number {
+            font-size: clamp(5rem, 16vw, 12rem);
+            font-weight: 900;
+            color: #166534;
+            letter-spacing: 4px;
+            line-height: 1;
+            margin-bottom: 1rem;
+            font-variant-numeric: tabular-nums;
+            transition: all 0.3s;
+        }
+        .serving-number.idle {
+            color: #94a3b8;
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: 400;
+            letter-spacing: 2px;
+        }
+        .serving-number.flash { animation: numflash 0.5s ease; }
+        @keyframes numflash {
+            0% { transform: scale(0.95); opacity: 0.4; }
+            60% { transform: scale(1.03); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .side-panel {
+            width: 380px;
+            display: flex;
+            flex-direction: column;
+            padding: 2.5rem 2rem;
+            gap: 2.5rem;
+            background: #f0fdf4;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        .side-label {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+        .next-list { display: flex; flex-direction: column; gap: 10px; }
+        .next-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: #fff;
+            border: 2px solid #bbf7d0;
+            border-radius: 14px;
+            transition: all 0.2s;
+        }
+        .next-item:first-child { border-color: #16a34a; background: #f0fdf4; }
+        .next-num {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #0f172a;
+            font-variant-numeric: tabular-nums;
+        }
+        .next-pos { font-size: 13px; font-weight: 600; color: #94a3b8; }
+        .next-empty { padding: 1.5rem; text-align: center; color: #94a3b8; font-size: 16px; font-weight: 500; }
+        .count-box {
+            background: #166534;
+            border-radius: 20px;
+            padding: 2rem;
             text-align: center;
         }
-        .now-serving-label {
-            font-size: 1.2rem;
-            opacity: .6;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            margin-bottom: 0.5rem;
-        }
-        .now-serving-number {
-            font-size: 7rem;
+        .count-num {
+            font-size: 5rem;
             font-weight: 900;
-            color: var(--green-50);
-            text-shadow: 0 0 60px rgba(22,163,74,.4);
-            letter-spacing: 4px;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 8px;
+            font-variant-numeric: tabular-nums;
         }
-        .now-serving-number.waiting {
-            color: rgba(255,255,255,.5);
-            font-size: 2.5rem;
-            text-shadow: none;
-        }
-        .board-footer {
+        .count-lbl { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.7); letter-spacing: 2px; text-transform: uppercase; }
+        footer {
+            background: #fff;
+            border-top: 2px solid #e2e8f0;
+            padding: 1rem 3rem;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: flex-end;
-            padding-top: 1.5rem;
-            border-top: 2px solid rgba(255,255,255,.1);
+            flex-shrink: 0;
         }
-        .next-list {
-            flex: 1;
-        }
-        .next-label {
-            font-size: .75rem;
-            opacity: .5;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: .5rem;
-        }
-        .next-tickets {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .next-ticket {
-            background: rgba(255,255,255,.08);
-            border: 1px solid rgba(255,255,255,.12);
-            border-radius: 10px;
-            padding: 8px 18px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            letter-spacing: 1px;
-        }
-        .waiting-count {
-            text-align: right;
-        }
-        .waiting-number {
-            font-size: 2.5rem;
-            font-weight: 800;
-        }
-        .waiting-label {
-            font-size: .75rem;
-            opacity: .5;
-            letter-spacing: 2px;
-        }
-        .board-time {
-            position: absolute;
-            top: 2rem;
-            right: 2rem;
-            font-size: .9rem;
-            opacity: .5;
-        }
+        .footer-tip { font-size: 15px; color: #64748b; font-weight: 500; }
+        .footer-url { font-size: 14px; color: #16a34a; font-weight: 700; }
     </style>
 </head>
 <body>
-
-<div class="board-time" id="clock"></div>
-
-<div class="board-container">
-    <div class="board-header">
-        <div class="hospital-name">Government Hospital</div>
-        <div class="dept-name" id="deptName">Loading...</div>
+<header>
+    <div class="header-left">
+        <div class="hospital">Government Hospital · Sri Lanka</div>
+        <div class="dept" id="deptName">Loading...</div>
     </div>
-
-    <div class="now-serving">
-        <div class="now-serving-label">Now Serving</div>
-        <div class="now-serving-number" id="currentTicket">—</div>
+    <div class="header-right">
+        <select class="dept-select" id="deptSelector" onchange="switchDepartment(this.value)">
+            <option value="">Loading...</option>
+        </select>
+        <div class="live-badge"><div class="live-dot"></div>Live</div>
+        <div class="clock" id="clock">--:--</div>
     </div>
+</header>
 
-    <div class="board-footer">
-        <div class="next-list">
-            <div class="next-label">Up Next</div>
-            <div class="next-tickets" id="nextTickets">
-                <span class="next-ticket" style="opacity:.4">—</span>
+<main>
+    <div class="serving-panel">
+        <div class="serving-label">Now Serving</div>
+        <div class="serving-number idle" id="currentTicket">Waiting...</div>
+    </div>
+    <div class="side-panel">
+        <div>
+            <div class="side-label">Up Next</div>
+            <div class="next-list" id="nextTickets">
+                <div class="next-empty">No patients waiting</div>
             </div>
         </div>
-        <div class="waiting-count">
-            <div class="waiting-number" id="totalWaiting">0</div>
-            <div class="waiting-label">Waiting</div>
+        <div>
+            <div class="side-label">Waiting</div>
+            <div class="count-box">
+                <div class="count-num" id="totalWaiting">0</div>
+                <div class="count-lbl">Patients</div>
+            </div>
         </div>
     </div>
-</div>
+</main>
+
+<footer>
+    <div class="footer-tip">Scan QR on your ticket to check status on your phone</div>
+    <div class="footer-url">opdqueue.lk/status</div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 <script>
-    const departmentId = /*[[${departmentId}]]*/ 1;
+    let departmentId = /*[[${departmentId}]]*/ 1;
+    let stomp = null;
+    let sock = null;
+    let subscription = null;
+    let pollTimer = null;
 
-    function updateClock() {
+    function tick() {
         const now = new Date();
-        document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
     }
-    updateClock();
-    setInterval(updateClock, 10000);
+    tick(); setInterval(tick, 1000);
+
+    // Load departments into dropdown
+    async function loadDepartments() {
+        try {
+            const depts = await fetch('/api/departments/admin/all').then(r => r.json());
+            if (!depts.length) return;
+            const sel = document.getElementById('deptSelector');
+            sel.innerHTML = depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+
+            // If current deptId not in list, pick first
+            const exists = depts.some(d => d.id == departmentId);
+            if (!exists) departmentId = depts[0].id;
+            sel.value = departmentId;
+
+            document.getElementById('deptName').textContent = depts.find(d => d.id == departmentId)?.name || '—';
+            connectBoard(departmentId);
+        } catch {}
+    }
+
+    function switchDepartment(newId) {
+        if (newId == departmentId) return;
+        departmentId = parseInt(newId);
+
+        // Update URL without reload
+        const url = new URL(window.location);
+        url.pathname = '/display/' + departmentId;
+        window.history.pushState({ deptId: departmentId }, '', url);
+
+        // Update dept name in header
+        const sel = document.getElementById('deptSelector');
+        document.getElementById('deptName').textContent = sel.options[sel.selectedIndex].text;
+
+        // Reset UI
+        document.getElementById('currentTicket').textContent = 'Waiting...';
+        document.getElementById('currentTicket').classList.add('idle');
+        document.getElementById('totalWaiting').textContent = '0';
+        document.getElementById('nextTickets').innerHTML = '<div class="next-empty">No patients waiting</div>';
+
+        // Reconnect
+        connectBoard(departmentId);
+    }
 
     function updateBoard(data) {
         document.getElementById('deptName').textContent = data.departmentName || '—';
-
-        const currentEl = document.getElementById('currentTicket');
-        const current = data.currentlyCalledTicket;
-        if (current && current !== '-') {
-            currentEl.textContent = current;
-            currentEl.classList.remove('waiting');
-        } else {
-            currentEl.textContent = '—';
-            currentEl.classList.add('waiting');
-        }
-
-        const nextContainer = document.getElementById('nextTickets');
-        const nextTickets = data.nextTickets || [];
-        if (nextTickets.length === 0) {
-            nextContainer.innerHTML = '<span class="next-ticket" style="opacity:.4">—</span>';
-        } else {
-            nextContainer.innerHTML = nextTickets.map(t => `<span class="next-ticket">${t}</span>`).join('');
-        }
-
         document.getElementById('totalWaiting').textContent = data.totalWaiting || 0;
+
+        const el = document.getElementById('currentTicket');
+        const cur = data.currentlyCalledTicket;
+        if (cur && cur !== '-' && cur !== 'Waiting...') {
+            if (el.textContent !== cur) {
+                el.textContent = cur;
+                el.classList.remove('idle', 'flash');
+                void el.offsetWidth;
+                el.classList.add('flash');
+            }
+            el.classList.remove('idle');
+        } else {
+            el.textContent = 'Waiting...';
+            el.classList.add('idle');
+        }
+
+        const nextList = document.getElementById('nextTickets');
+        const nexts = (data.nextTickets || []).filter(t => t !== cur);
+        const labels = ['Next', '2nd', '3rd', '4th', '5th'];
+        nextList.innerHTML = nexts.length
+            ? nexts.slice(0, 5).map((t, i) => `<div class="next-item"><span class="next-num">${t}</span><span class="next-pos">${labels[i]}</span></div>`).join('')
+            : '<div class="next-empty">No patients waiting</div>';
     }
 
-    // Initial load
-    fetch(`/api/display/${departmentId}`)
-        .then(r => r.json())
-        .then(updateBoard);
+    function connectBoard(deptId) {
+        // Clear old connections
+        if (pollTimer) clearInterval(pollTimer);
+        if (subscription) { try { subscription.unsubscribe(); } catch {} }
+        if (stomp) { try { stomp.disconnect(); } catch {} }
 
-    // WebSocket updates
-    const socket = new SockJS('/ws');
-    const stomp = Stomp.over(socket);
-    stomp.connect({}, () => {
-        stomp.subscribe(`/topic/queue/${departmentId}`, msg => {
-            const data = JSON.parse(msg.body);
-            updateBoard(data);
+        // Fetch initial data
+        fetch(`/api/display/${deptId}`).then(r => r.json()).then(updateBoard).catch(() => {});
+
+        // Connect WebSocket
+        sock = new SockJS('/ws');
+        stomp = Stomp.over(sock);
+        stomp.debug = null;
+        stomp.connect({}, () => {
+            subscription = stomp.subscribe(`/topic/queue/${deptId}`, msg => updateBoard(JSON.parse(msg.body)));
+        }, () => {
+            // reconnect after 5s on failure
+            setTimeout(() => connectBoard(deptId), 5000);
         });
-        stomp.subscribe(`/topic/queue/${departmentId}/count`, msg => {
-            document.getElementById('totalWaiting').textContent = msg.body;
-        });
-    });
+
+        // Fallback polling every 30s
+        pollTimer = setInterval(() => {
+            fetch(`/api/display/${deptId}`).then(r => r.json()).then(updateBoard).catch(() => {});
+        }, 30000);
+    }
+
+    loadDepartments();
 </script>
-
 </body>
 </html>

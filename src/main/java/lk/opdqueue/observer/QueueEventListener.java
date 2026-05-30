@@ -6,4 +6,6 @@ import lk.opdqueue.entity.QueueTicket;
 public interface QueueEventListener {
     void onTicketCalled(QueueTicket ticket);
     void onQueueUpdated(Department department);
+
+    default void onTicketIssued(QueueTicket ticket) {}
 }
