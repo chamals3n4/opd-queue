@@ -1,56 +1,94 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login — OPD Queue</title>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/carbon.css}">
-    <link rel="stylesheet" th:href="@{/css/login.css}">
-</head>
-<body class="login-page">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Login - OPD Queue</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" th:href="@{/css/carbon.css}" />
+        <link rel="stylesheet" th:href="@{/css/login.css}" />
+    </head>
+    <body class="login-page">
+        <header class="login-header">
+            <div class="login-logo">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <rect
+                        x="2"
+                        y="2"
+                        width="16"
+                        height="16"
+                        stroke="#fff"
+                        stroke-width="1.5"
+                    />
+                    <path
+                        d="M10 6v8M6 10h8"
+                        stroke="#fff"
+                        stroke-width="1.5"
+                        stroke-linecap="square"
+                    />
+                </svg>
+                <span class="login-logo-text">OPD Queue</span>
+            </div>
+        </header>
 
-<header class="login-header">
-    <div class="login-logo">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <rect x="2" y="2" width="16" height="16" stroke="#fff" stroke-width="1.5"/>
-            <path d="M10 6v8M6 10h8" stroke="#fff" stroke-width="1.5" stroke-linecap="square"/>
-        </svg>
-        <span class="login-logo-text">OPD Queue</span>
-    </div>
-</header>
+        <div class="login-body">
+            <div class="login-card">
+                <div class="login-title">Sign in</div>
+                <div class="login-subtitle">OPD Queue Management System</div>
 
-<div class="login-body">
-    <div class="login-card">
-        <div class="login-title">Sign in</div>
-        <div class="login-subtitle">OPD Queue Management System</div>
+                <div
+                    th:if="${param.error}"
+                    class="login-alert login-alert-error"
+                >
+                    Invalid username or password.
+                </div>
+                <div
+                    th:if="${param.logout}"
+                    class="login-alert login-alert-success"
+                >
+                    You have been signed out.
+                </div>
 
-        <div th:if="${param.error}" class="login-alert login-alert-error">
-            Invalid username or password.
+                <form class="login-form" th:action="@{/login}" method="post">
+                    <div class="form-group">
+                        <label class="form-label" for="username"
+                            >Username</label
+                        >
+                        <input
+                            class="form-control"
+                            type="text"
+                            id="username"
+                            name="username"
+                            placeholder="Enter username"
+                            autofocus
+                            autocomplete="username"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="password"
+                            >Password</label
+                        >
+                        <input
+                            class="form-control"
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Enter password"
+                            autocomplete="current-password"
+                        />
+                    </div>
+                    <div class="login-actions">
+                        <button class="btn btn-primary btn-lg" type="submit">
+                            Sign in
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div th:if="${param.logout}" class="login-alert login-alert-success">
-            You have been signed out.
-        </div>
 
-        <form class="login-form" th:action="@{/login}" method="post">
-            <div class="form-group">
-                <label class="form-label" for="username">Username</label>
-                <input class="form-control" type="text" id="username" name="username"
-                       placeholder="Enter username" autofocus autocomplete="username">
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="password">Password</label>
-                <input class="form-control" type="password" id="password" name="password"
-                       placeholder="Enter password" autocomplete="current-password">
-            </div>
-            <div class="login-actions">
-                <button class="btn btn-primary btn-lg" type="submit">Sign in</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="login-bg-text">OPD</div>
-
-</body>
+        <div class="login-bg-text">OPD</div>
+    </body>
 </html>

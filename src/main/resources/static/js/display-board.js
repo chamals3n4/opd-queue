@@ -1,4 +1,4 @@
-let stomp = null, sock = null, subscription = null, pollTimer = null;
+let stomp = null, sock = null, subscription = null, pollTimer = null, wsConnected = false;
 
 // ── Footer URL (dynamic) ───────────────────────────────────────
 document.getElementById('footerUrl').textContent = window.location.origin + '/status';
@@ -6,7 +6,7 @@ document.getElementById('footerUrl').textContent = window.location.origin + '/st
 // ── Clock ──────────────────────────────────────────────────────
 function tick() {
     document.getElementById('clock').textContent =
-        new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 }
 tick();
 setInterval(tick, 1000);
@@ -41,26 +41,40 @@ function updateBoard(data) {
         : '<div class="next-empty">No patients waiting</div>';
 }
 
+function fetchBoard(deptId) {
+    fetch(`/api/display/${deptId}`, { cache: 'no-store' }).then(r => r.json()).then(updateBoard).catch(() => {});
+}
+
+function startFallbackPoll(deptId) {
+    if (pollTimer) return;
+    pollTimer = setInterval(() => fetchBoard(deptId), 5000);
+}
+
+function stopFallbackPoll() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+}
+
 // ── WebSocket + polling ────────────────────────────────────────
 function connectBoard(deptId) {
-    if (pollTimer)    clearInterval(pollTimer);
-    if (subscription) { try { subscription.unsubscribe(); } catch {} }
-    if (stomp)        { try { stomp.disconnect();         } catch {} }
+    if (subscription) { try { subscription.unsubscribe(); } catch {} subscription = null; }
+    const oldStomp = stomp;
+    stomp = null;
+    if (oldStomp) { try { oldStomp.disconnect(); } catch {} }
 
-    fetch(`/api/display/${deptId}`).then(r => r.json()).then(updateBoard).catch(() => {});
+    fetchBoard(deptId);
 
     sock  = new SockJS('/ws');
     stomp = Stomp.over(sock);
     stomp.debug = null;
     stomp.connect({}, () => {
+        wsConnected = true;
+        stopFallbackPoll();
         subscription = stomp.subscribe(`/topic/queue/${deptId}`, msg => updateBoard(JSON.parse(msg.body)));
     }, () => {
+        wsConnected = false;
+        startFallbackPoll(deptId);
         setTimeout(() => connectBoard(deptId), 5000);
     });
-
-    pollTimer = setInterval(() => {
-        fetch(`/api/display/${deptId}`).then(r => r.json()).then(updateBoard).catch(() => {});
-    }, 30000);
 }
 
 connectBoard(DEPT_ID);

@@ -1,9 +1,11 @@
 package lk.opdqueue.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lk.opdqueue.enums.DepartmentType;
 import java.time.LocalDateTime;
 
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "departments")
 public class Department {

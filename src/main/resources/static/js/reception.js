@@ -1,4 +1,4 @@
-let currentNic = null, selectedDeptId = null, isEmergency = false, currentSlipUrl = null;
+let currentNic = null, selectedDeptId = null, selectedDeptName = null, isEmergency = false, currentSlipUrl = null;
 
 async function apiFetch(url, opts = {}) {
     const res = await fetch(url, opts);
@@ -13,6 +13,7 @@ async function apiFetch(url, opts = {}) {
 apiFetch('/api/departments').then(r => r.json()).then(depts => {
     if (depts.length) {
         selectedDeptId = depts[0].id;
+        selectedDeptName = depts[0].name;
         document.getElementById('selectedDeptId').value = selectedDeptId;
         checkReady();
     }
@@ -111,10 +112,11 @@ function showPrintModal(t) {
     document.getElementById('printStatus').textContent    = t.status.replace(/_/g, ' ');
     document.getElementById('printAhead').textContent     = t.queuePosition - 1;
     document.getElementById('printPatient').textContent   = t.patient?.fullName || '—';
-    document.getElementById('printDept').textContent      = t.department?.name  || '—';
+    document.getElementById('printDept').textContent      = selectedDeptName || t.department?.name || '—';
     document.getElementById('printTicketId').textContent  = t.ticketNumber;
 
     document.getElementById('printHeader').className = 'print-header' + (emerg ? ' emergency' : '');
+    document.getElementById('printTicketNum').className = 'ph-ticket' + (emerg ? ' emergency' : '');
     document.getElementById('printEmergBadge').classList.toggle('show', !!emerg);
     document.getElementById('btnPrint').className = 'btn btn-print' + (emerg ? ' emergency' : '');
 

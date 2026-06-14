@@ -9,6 +9,7 @@ import lk.opdqueue.entity.QueueTicket;
 import lk.opdqueue.enums.TicketStatus;
 import lk.opdqueue.exception.DepartmentNotFoundException;
 import lk.opdqueue.exception.InvalidTicketStateException;
+import lk.opdqueue.exception.PatientAlreadyInQueueException;
 import lk.opdqueue.exception.QueueFullException;
 import lk.opdqueue.exception.TicketNotFoundException;
 import lk.opdqueue.observer.QueueEventListener;
@@ -31,7 +32,6 @@ public class QueueService {
     private final PatientService patientService;
     private final TicketNumberGenerator ticketNumberGenerator;
     private final PriorityQueueStrategy queueStrategy;
-    private final SlipGeneratorService slipGeneratorService;
     private final List<QueueEventListener> eventListeners;
 
     public QueueService(QueueTicketRepository ticketRepository,
@@ -39,20 +39,24 @@ public class QueueService {
                         PatientService patientService,
                         TicketNumberGenerator ticketNumberGenerator,
                         PriorityQueueStrategy queueStrategy,
-                        SlipGeneratorService slipGeneratorService,
                         List<QueueEventListener> eventListeners) {
         this.ticketRepository = ticketRepository;
         this.departmentRepository = departmentRepository;
         this.patientService = patientService;
         this.ticketNumberGenerator = ticketNumberGenerator;
         this.queueStrategy = queueStrategy;
-        this.slipGeneratorService = slipGeneratorService;
         this.eventListeners = eventListeners;
     }
 
     @Transactional
     public QueueTicket issueTicket(IssueTicketRequest request) throws Exception {
         Patient patient = patientService.findByNic(request.getNic());
+
+        List<TicketStatus> activeStatuses = List.of(TicketStatus.WAITING, TicketStatus.CALLED, TicketStatus.IN_PROGRESS);
+        if (ticketRepository.existsByPatientIdAndStatusIn(patient.getId(), activeStatuses)) {
+            throw new PatientAlreadyInQueueException(
+                "Patient " + patient.getFullName() + " already has an active ticket in the queue.");
+        }
 
         Department department = departmentRepository.findById(request.getDepartmentId())
                 .orElseThrow(() -> new DepartmentNotFoundException(
@@ -62,9 +66,9 @@ public class QueueService {
             throw new QueueFullException("Queue is full for department: " + department.getName());
         }
 
-        List<TicketStatus> activeStatuses = List.of(TicketStatus.WAITING, TicketStatus.REGISTERED, TicketStatus.CALLED);
+        List<TicketStatus> positionStatuses = List.of(TicketStatus.WAITING, TicketStatus.REGISTERED, TicketStatus.CALLED);
         int maxPosition = ticketRepository
-                .findMaxQueuePositionByDepartmentId(department.getId(), activeStatuses)
+                .findMaxQueuePositionByDepartmentId(department.getId(), positionStatuses)
                 .orElse(0);
 
         QueueTicket ticket = new QueueTicket();
@@ -79,11 +83,6 @@ public class QueueService {
         ));
 
         QueueTicket saved = ticketRepository.save(ticket);
-
-        // generate PDF slip and upload to R2
-        String slipUrl = slipGeneratorService.generateAndUpload(saved);
-        saved.setSlipR2Key(slipUrl);
-        ticketRepository.save(saved);
 
         department.setCurrentQueueCount(department.getCurrentQueueCount() + 1);
         departmentRepository.save(department);

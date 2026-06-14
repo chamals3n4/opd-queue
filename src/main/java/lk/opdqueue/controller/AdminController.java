@@ -6,11 +6,15 @@ import lk.opdqueue.enums.TicketStatus;
 import lk.opdqueue.repository.PatientRepository;
 import lk.opdqueue.repository.QueueTicketRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
+@Transactional(readOnly = true)
 public class AdminController {
 
     private final QueueTicketRepository ticketRepository;
@@ -19,6 +23,15 @@ public class AdminController {
     public AdminController(QueueTicketRepository ticketRepository, PatientRepository patientRepository) {
         this.ticketRepository = ticketRepository;
         this.patientRepository = patientRepository;
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Long>> getStats() {
+        Map<String, Long> counts = new HashMap<>();
+        for (Object[] row : ticketRepository.countGroupByStatus()) {
+            counts.put(((TicketStatus) row[0]).name(), (Long) row[1]);
+        }
+        return ResponseEntity.ok(counts);
     }
 
     @GetMapping("/tickets/all")

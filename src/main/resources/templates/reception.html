@@ -1,152 +1,258 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reception — OPD Queue</title>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/carbon.css}">
-    <link rel="stylesheet" th:href="@{/css/reception.css}">
-</head>
-<body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Reception - OPD Queue</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" th:href="@{/css/carbon.css}" />
+        <link rel="stylesheet" th:href="@{/css/reception.css}" />
+    </head>
+    <body>
+        <nav
+            th:replace="~{fragments/nav :: nav(section='Reception', links=~{::reception-nav-links})}"
+        >
+            <th:block th:ref="reception-nav-links">
+                <a href="/admin" class="shell-link">Admin Panel</a>
+                <a href="/display/1" class="shell-link primary" target="_blank" style="display:flex;align-items:center;gap:6px;">Display Board
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+                </a>
+                <form
+                    th:action="@{/logout}"
+                    method="post"
+                    style="margin: 0; height: 48px; display: flex"
+                >
+                    <button
+                        type="submit"
+                        class="shell-link"
+                        style="
+                            border-left: 1px solid rgba(255, 255, 255, 0.2);
+                            color: #fff;
+                            background: #da1e28;
+                        "
+                    >
+                        Sign out
+                    </button>
+                </form>
+            </th:block>
+        </nav>
 
-<nav th:replace="~{fragments/nav :: nav(section='Reception', links=~{::reception-nav-links})}">
-    <th:block th:ref="reception-nav-links">
-        <a href="/admin" class="shell-link">Admin Panel</a>
-        <a href="/display/1" class="shell-link primary" target="_blank">Display Board</a>
-        <form th:action="@{/logout}" method="post" style="margin:0;height:48px;display:flex">
-            <button type="submit" class="shell-link" style="border-left:1px solid rgba(255,255,255,0.2);color:#fff;background:#da1e28;">Sign out</button>
-        </form>
-    </th:block>
-</nav>
+        <div class="layout">
+            <div class="panel panel-left">
+                <div class="section-heading">Register Patient</div>
+                <form id="registerForm">
+                    <div class="field">
+                        <label>NIC Number</label>
+                        <input
+                            type="text"
+                            name="nic"
+                            placeholder="200012345678"
+                            autocomplete="off"
+                            required
+                        />
+                    </div>
+                    <div class="field">
+                        <label>Full Name</label>
+                        <input
+                            type="text"
+                            name="fullName"
+                            placeholder="Patient full name"
+                            required
+                        />
+                    </div>
+                    <div class="row">
+                        <div class="field">
+                            <label>Date of Birth</label>
+                            <input type="date" name="dateOfBirth" required />
+                        </div>
+                        <div class="field">
+                            <label>Gender</label>
+                            <select name="gender" required>
+                                <option value="">Select</option>
+                                <option value="MALE">Male</option>
+                                <option value="FEMALE">Female</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="field">
+                            <label>Contact</label>
+                            <input
+                                type="text"
+                                name="contactNumber"
+                                placeholder="07XXXXXXXX"
+                                required
+                            />
+                        </div>
+                        <div class="field">
+                            <label>Patient Type</label>
+                            <select name="patientType" required>
+                                <option value="">Select</option>
+                                <option value="WALK_IN">Walk-in</option>
+                                <option value="PRE_REGISTERED">
+                                    Pre-registered
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">
+                        Register Patient
+                    </button>
+                </form>
+                <div id="registerAlert" class="alert"></div>
+            </div>
 
-<div class="layout">
-    <div class="panel panel-left">
-        <div class="section-heading">Register Patient</div>
-        <form id="registerForm">
-            <div class="field">
-                <label>NIC Number</label>
-                <input type="text" name="nic" placeholder="200012345678" autocomplete="off" required>
-            </div>
-            <div class="field">
-                <label>Full Name</label>
-                <input type="text" name="fullName" placeholder="Patient full name" required>
-            </div>
-            <div class="row">
-                <div class="field">
-                    <label>Date of Birth</label>
-                    <input type="date" name="dateOfBirth" required>
+            <div class="panel panel-right">
+                <div class="section-heading">Issue Queue Ticket</div>
+
+                <div class="tile">
+                    <div class="tile-heading">Find Patient by NIC</div>
+                    <div class="lookup-row">
+                        <input
+                            type="text"
+                            id="lookupNic"
+                            placeholder="Enter NIC number"
+                        />
+                        <button class="btn" id="lookupBtn">Search</button>
+                    </div>
+
+                    <div class="patient-pill" id="patientPill">
+                        <div class="avatar" id="patientAvatar">?</div>
+                        <div>
+                            <div class="pname" id="patientName">—</div>
+                            <div class="pnic" id="patientNic">—</div>
+                        </div>
+                    </div>
+
+                    <div class="dept-info">
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                        >
+                            <rect
+                                x="1.5"
+                                y="1.5"
+                                width="13"
+                                height="13"
+                                stroke="#525252"
+                                stroke-width="1.2"
+                            />
+                            <path
+                                d="M8 5v6M5 8h6"
+                                stroke="#525252"
+                                stroke-width="1.2"
+                                stroke-linecap="square"
+                            />
+                        </svg>
+                        <span class="di-label">Department</span>
+                        <span class="di-name">OPD</span>
+                    </div>
+                    <input type="hidden" id="selectedDeptId" />
+
+                    <div class="emergency-row" id="emergencyRow">
+                        <div class="emergency-chk" id="emergencyChk">
+                            <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 12 12"
+                                fill="none"
+                            >
+                                <polyline
+                                    points="1.5,6 5,9.5 10.5,2.5"
+                                    stroke="#fff"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                        </div>
+                        <div class="emergency-txt">
+                            <div class="etitle">Emergency Patient</div>
+                            <div class="esub">
+                                Moves immediately to front of queue
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        class="btn btn-primary btn-full"
+                        id="issueBtn"
+                        disabled
+                    >
+                        Issue Ticket
+                    </button>
+                    <div id="issueAlert" class="alert"></div>
                 </div>
-                <div class="field">
-                    <label>Gender</label>
-                    <select name="gender" required>
-                        <option value="">Select</option>
-                        <option value="MALE">Male</option>
-                        <option value="FEMALE">Female</option>
-                        <option value="OTHER">Other</option>
-                    </select>
+
+                <div class="empty-state" id="emptyState">
+                    <div class="eico">🎫</div>
+                    <div class="etitle">No ticket issued yet</div>
+                    <div class="esub">
+                        Register or look up a patient, then issue a queue ticket
+                    </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="field">
-                    <label>Contact</label>
-                    <input type="text" name="contactNumber" placeholder="07XXXXXXXX" required>
-                </div>
-                <div class="field">
-                    <label>Patient Type</label>
-                    <select name="patientType" required>
-                        <option value="">Select</option>
-                        <option value="WALK_IN">Walk-in</option>
-                        <option value="PRE_REGISTERED">Pre-registered</option>
-                    </select>
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary btn-full">Register Patient</button>
-        </form>
-        <div id="registerAlert" class="alert"></div>
-    </div>
-
-    <div class="panel panel-right">
-        <div class="section-heading">Issue Queue Ticket</div>
-
-        <div class="tile">
-            <div class="tile-heading">Find Patient by NIC</div>
-            <div class="lookup-row">
-                <input type="text" id="lookupNic" placeholder="Enter NIC number">
-                <button class="btn" id="lookupBtn">Search</button>
-            </div>
-
-            <div class="patient-pill" id="patientPill">
-                <div class="avatar" id="patientAvatar">?</div>
-                <div>
-                    <div class="pname" id="patientName">—</div>
-                    <div class="pnic" id="patientNic">—</div>
-                </div>
-            </div>
-
-            <div class="dept-info">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <rect x="1.5" y="1.5" width="13" height="13" stroke="#525252" stroke-width="1.2"/>
-                    <path d="M8 5v6M5 8h6" stroke="#525252" stroke-width="1.2" stroke-linecap="square"/>
-                </svg>
-                <span class="di-label">Department</span>
-                <span class="di-name">OPD</span>
-            </div>
-            <input type="hidden" id="selectedDeptId">
-
-            <div class="emergency-row" id="emergencyRow">
-                <div class="emergency-chk" id="emergencyChk">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <polyline points="1.5,6 5,9.5 10.5,2.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-                <div class="emergency-txt">
-                    <div class="etitle">Emergency Patient</div>
-                    <div class="esub">Moves immediately to front of queue</div>
-                </div>
-            </div>
-
-            <button class="btn btn-primary btn-full" id="issueBtn" disabled>Issue Ticket</button>
-            <div id="issueAlert" class="alert"></div>
         </div>
 
-        <div class="empty-state" id="emptyState">
-            <div class="eico">🎫</div>
-            <div class="etitle">No ticket issued yet</div>
-            <div class="esub">Register or look up a patient, then issue a queue ticket</div>
+        <!-- Print Modal -->
+        <div class="modal-overlay" id="printModal">
+            <div class="print-modal">
+                <div class="print-header" id="printHeader">
+                    <div class="ph-label">Queue Ticket Issued</div>
+                    <div class="print-emerg-badge" id="printEmergBadge">Emergency</div>
+                </div>
+                <div class="print-body">
+                    <div class="print-left">
+                        <div class="ph-ticket" id="printTicketNum">—</div>
+                        <div class="print-details">
+                            <div class="print-detail">
+                                <span class="pd-val" id="printPos">—</span>
+                                <span class="pd-lbl">Position</span>
+                            </div>
+                            <div class="print-detail">
+                                <span class="pd-val" id="printWait">—</span>
+                                <span class="pd-lbl">Est. Wait</span>
+                            </div>
+                            <div class="print-detail">
+                                <span class="pd-val" id="printStatus">—</span>
+                                <span class="pd-lbl">Status</span>
+                            </div>
+                            <div class="print-detail">
+                                <span class="pd-val" id="printAhead">0</span>
+                                <span class="pd-lbl">Ahead</span>
+                            </div>
+                        </div>
+                        <div class="print-meta">
+                            <div class="print-meta-row">
+                                <span class="pm-lbl">Patient</span>
+                                <span class="pm-val" id="printPatient">—</span>
+                            </div>
+                            <div class="print-meta-row">
+                                <span class="pm-lbl">Department</span>
+                                <span class="pm-val" id="printDept">—</span>
+                            </div>
+                            <div class="print-meta-row">
+                                <span class="pm-lbl">Ticket #</span>
+                                <span class="pm-val" id="printTicketId">—</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="qr-section">
+                        <img class="qr-preview" id="printQr" src="" alt="QR Code" style="display:none" />
+                    </div>
+                </div>
+                <div class="print-actions">
+                    <button class="btn btn-close-modal" onclick="closePrintModal()">Close</button>
+                    <button class="btn btn-print" id="btnPrint" onclick="printSlip()">Print Slip</button>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
-<!-- Print Modal -->
-<div class="modal-overlay" id="printModal">
-    <div class="print-modal">
-        <div class="print-header" id="printHeader">
-            <div class="ph-label">Queue Ticket Issued</div>
-            <div class="ph-ticket" id="printTicketNum">—</div>
-            <div class="print-emerg-badge" id="printEmergBadge">Emergency</div>
-        </div>
-        <div class="print-details">
-            <div class="print-detail"><span class="pd-val" id="printPos">—</span><span class="pd-lbl">Position</span></div>
-            <div class="print-detail"><span class="pd-val" id="printWait">—</span><span class="pd-lbl">Est. Wait</span></div>
-            <div class="print-detail"><span class="pd-val" id="printStatus">—</span><span class="pd-lbl">Status</span></div>
-            <div class="print-detail"><span class="pd-val" id="printAhead">0</span><span class="pd-lbl">Ahead</span></div>
-        </div>
-        <div class="print-meta">
-            <div class="print-meta-row"><span class="pm-lbl">Patient</span><span class="pm-val" id="printPatient">—</span></div>
-            <div class="print-meta-row"><span class="pm-lbl">Department</span><span class="pm-val" id="printDept">—</span></div>
-            <div class="print-meta-row"><span class="pm-lbl">Ticket #</span><span class="pm-val" id="printTicketId">—</span></div>
-        </div>
-        <div class="qr-section">
-            <img class="qr-preview" id="printQr" src="" alt="QR Code" style="display:none">
-        </div>
-        <div class="print-actions">
-            <button class="btn btn-close-modal" onclick="closePrintModal()">Close</button>
-            <button class="btn btn-print" id="btnPrint" onclick="printSlip()">Print Slip</button>
-        </div>
-    </div>
-</div>
-
-<script th:src="@{/js/reception.js}"></script>
-</body>
+        <script th:src="@{/js/reception.js}"></script>
+    </body>
 </html>

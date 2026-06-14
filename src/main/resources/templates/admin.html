@@ -1,348 +1,741 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin — OPD Queue</title>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" th:href="@{/css/carbon.css}">
-    <link rel="stylesheet" th:href="@{/css/admin.css}">
-</head>
-<body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Admin - OPD Queue</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" th:href="@{/css/carbon.css}" />
+        <link rel="stylesheet" th:href="@{/css/admin.css}" />
+    </head>
+    <body>
+        <nav
+            th:replace="~{fragments/nav :: nav(section='Admin', links=~{::admin-nav-links})}"
+        >
+            <th:block th:ref="admin-nav-links">
+                <a href="/" class="shell-link">Reception</a>
+                <a href="/display/1" target="_blank" class="shell-link" style="display:flex;align-items:center;gap:6px;">Display Board
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>
+                </a>
+                <form
+                    th:action="@{/logout}"
+                    method="post"
+                    style="margin: 0; height: 48px; display: flex"
+                >
+                    <button
+                        type="submit"
+                        class="shell-link"
+                        style="
+                            border-left: 1px solid rgba(255, 255, 255, 0.2);
+                            color: #fff;
+                            background: #da1e28;
+                        "
+                    >
+                        Sign out
+                    </button>
+                </form>
+            </th:block>
+        </nav>
 
-<nav th:replace="~{fragments/nav :: nav(section='Admin', links=~{::admin-nav-links})}">
-    <th:block th:ref="admin-nav-links">
-        <a href="/" class="shell-link">Reception</a>
-        <a href="/display/1" target="_blank" class="shell-link">Display Board ↗</a>
-        <form th:action="@{/logout}" method="post" style="margin:0;height:48px;display:flex">
-            <button type="submit" class="shell-link" style="border-left:1px solid rgba(255,255,255,0.2);color:#fff;background:#da1e28;">Sign out</button>
-        </form>
-    </th:block>
-</nav>
-
-<div class="body">
-    <aside class="sidebar">
-        <div class="sidebar-label">Dashboard</div>
-        <button class="sidebar-item active" data-tab="overview">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2 6.5L8 2l6 4.5V14a.5.5 0 01-.5.5h-4V10H6.5v4.5h-4A.5.5 0 012 14V6.5z" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linejoin="round"/></svg>
-            Overview
-        </button>
-        <button class="sidebar-item" data-tab="queue">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M2.5 4h11M2.5 8h7M2.5 12h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-            Queue Control
-        </button>
-        <div class="sidebar-label">Management</div>
-        <button class="sidebar-item" data-tab="doctors">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="5" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M1.5 14c0-2.761 2.239-4.5 5-4.5s5 1.739 5 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M12.5 7.5v4M10.5 9.5h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-            Doctors
-        </button>
-        <button class="sidebar-item" data-tab="staff">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="5.5" cy="5.5" r="2" stroke="currentColor" stroke-width="1.4"/><path d="M1 14c0-2.485 2.015-4 4.5-4s4.5 1.515 4.5 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="11.5" cy="5" r="1.75" stroke="currentColor" stroke-width="1.4"/><path d="M14 13c0-1.9-1.1-3.1-2.5-3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-            Staff
-        </button>
-        <div class="sidebar-label">Records</div>
-        <button class="sidebar-item" data-tab="patients">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="3" y="2.5" width="10" height="12" rx="1" stroke="currentColor" stroke-width="1.4"/><path d="M6 2.5a1.5 1.5 0 011.5-1h1A1.5 1.5 0 0110 2.5" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 7.5h5M5.5 10.5h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-            Patients
-        </button>
-    </aside>
-
-    <main class="main">
-        <div id="toast" class="toast"></div>
-
-        <!-- ===== OVERVIEW ===== -->
-        <section class="section show" id="sec-overview">
-            <div class="page-header">
-                <div>
-                    <div class="page-title">Overview</div>
-                    <div class="page-sub">OPD queue status — today</div>
-                </div>
-                <button class="btn btn-secondary" onclick="loadOverview()">Refresh</button>
-            </div>
-
-            <div class="stats-row">
-                <div class="stat-card">
-                    <div class="stat-icon blue">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M9 6v3.5l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    </div>
-                    <div><div class="stat-val" id="ovWaiting">—</div><div class="stat-lbl">Waiting</div></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon amber">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3.5 9h11M11 5.5l3.5 3.5-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </div>
-                    <div><div class="stat-val" id="ovCalled">—</div><div class="stat-lbl">Being Seen</div></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon green">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9l4 4 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    </div>
-                    <div><div class="stat-val" id="ovCompleted">—</div><div class="stat-lbl">Completed</div></div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon red">
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 5l8 8M13 5l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                    </div>
-                    <div><div class="stat-val" id="ovNoShow">—</div><div class="stat-lbl">No Shows</div></div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">OPD Queue</div>
-                    <button class="btn btn-primary btn-lg" onclick="goToQueue()">Manage Queue</button>
-                </div>
-                <div class="card-body">
-                    <div class="queue-snapshot">
-                        <div class="qs-item"><div class="qs-label">Now Serving</div><div class="qs-val" id="ovServing">—</div></div>
-                        <div class="qs-divider"></div>
-                        <div class="qs-item"><div class="qs-label">Up Next</div><div class="qs-val muted" id="ovNext">—</div></div>
-                        <div class="qs-divider"></div>
-                        <div class="qs-item"><div class="qs-label">Total Waiting</div><div class="qs-val" id="ovTotalWaiting">—</div></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ===== QUEUE CONTROL ===== -->
-        <section class="section" id="sec-queue">
-            <div class="page-header">
-                <div>
-                    <div class="page-title">Queue Control</div>
-                    <div class="page-sub">OPD department</div>
-                </div>
-                <div class="action-group">
-                    <button class="btn btn-danger" onclick="confirmResetQueue()">Reset Queue</button>
-                    <button class="btn btn-secondary" onclick="loadQueue()">Refresh</button>
-                </div>
-            </div>
-
-            <div class="queue-grid">
-                <div class="now-serving-card">
-                    <div class="ns-label">Now Serving</div>
-                    <div class="ns-ticket idle" id="nsTicket">No patient called</div>
-                    <div class="ns-patient" id="nsPatient"></div>
-                    <div class="ns-actions" id="nsActions"></div>
-                </div>
-                <button class="call-next-card" onclick="callNext()">
-                    <div class="cn-eyebrow">Action</div>
-                    <div class="cn-text">Call Next Patient</div>
-                    <div class="cn-sub" id="callNextSub">—</div>
+        <div class="body">
+            <aside class="sidebar">
+                <div class="sidebar-label">Dashboard</div>
+                <button class="sidebar-item active" data-tab="overview">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                        <path
+                            d="M2 6.5L8 2l6 4.5V14a.5.5 0 01-.5.5h-4V10H6.5v4.5h-4A.5.5 0 012 14V6.5z"
+                            stroke="currentColor"
+                            stroke-width="1.4"
+                            fill="none"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                    Overview
                 </button>
-            </div>
+                <button class="sidebar-item" data-tab="queue">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                        <path
+                            d="M2.5 4h11M2.5 8h7M2.5 12h9"
+                            stroke="currentColor"
+                            stroke-width="1.4"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                    Queue Control
+                </button>
+                <div class="sidebar-label">Management</div>
+                <button class="sidebar-item" data-tab="doctors">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                        <circle
+                            cx="6.5"
+                            cy="5"
+                            r="2.5"
+                            stroke="currentColor"
+                            stroke-width="1.4"
+                        />
+                        <path
+                            d="M1.5 14c0-2.761 2.239-4.5 5-4.5s5 1.739 5 4.5"
+                            stroke="currentColor"
+                            stroke-width="1.4"
+                            stroke-linecap="round"
+                        />
+                        <path
+                            d="M12.5 7.5v4M10.5 9.5h4"
+                            stroke="currentColor"
+                            stroke-width="1.4"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                    Doctors
+                </button>
+                <button class="sidebar-item" data-tab="staff">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                        <circle
+                            cx="5.5"
+                            cy="5.5"
+                            r="2"
+                            stroke="currentColor"
+                            stroke-width="1.4"
+                        />
+                        <path
+                            d="M1 14c0-2.485 2.015-4 4.5-4s4.5 1.515 4.5 4"
+                            stroke="currentColor"
+                            stroke-width="1.4"
+                            stroke-linecap="round"
+                        />
+                        <circle
+                            cx="11.5"
+                            cy="5"
+                            r="1.75"
+                            stroke="currentColor"
+                            stroke-width="1.4"
+                        />
+                        <path
+                            d="M14 13c0-1.9-1.1-3.1-2.5-3.4"
+                            stroke="currentColor"
+                            stroke-width="1.4"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                    Staff
+                </button>
+                <div class="sidebar-label">Records</div>
+                <button class="sidebar-item" data-tab="patients">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                        <rect
+                            x="3"
+                            y="2.5"
+                            width="10"
+                            height="12"
+                            rx="1"
+                            stroke="currentColor"
+                            stroke-width="1.4"
+                        />
+                        <path
+                            d="M6 2.5a1.5 1.5 0 011.5-1h1A1.5 1.5 0 0110 2.5"
+                            stroke="currentColor"
+                            stroke-width="1.4"
+                        />
+                        <path
+                            d="M5.5 7.5h5M5.5 10.5h3"
+                            stroke="currentColor"
+                            stroke-width="1.4"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                    Patients
+                </button>
+            </aside>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Waiting Queue</div>
-                    <span class="badge" id="waitingBadge">0 waiting</span>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width:36px">#</th>
-                            <th>Ticket</th>
-                            <th>Patient</th>
-                            <th>Est. Wait</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="queueTableBody">
-                        <tr><td colspan="6" class="empty-cell"><div class="empty-cell-title">Queue is empty</div></td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+            <main class="main">
+                <div id="toast" class="toast"></div>
 
-        <!-- ===== DOCTORS ===== -->
-        <section class="section" id="sec-doctors">
-            <div class="page-header">
-                <div>
-                    <div class="page-title">Doctors</div>
-                    <div class="page-sub">OPD medical staff</div>
-                </div>
-                <button class="btn btn-primary" onclick="openDoctorModal()">+ Add Doctor</button>
-            </div>
-            <div class="card">
-                <table>
-                    <thead>
-                        <tr><th>Name</th><th>Specialization</th><th>Room</th><th>Status</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody id="doctorTableBody">
-                        <tr><td colspan="5" class="empty-cell"><div class="empty-cell-title">No doctors added</div></td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+                <!-- ===== OVERVIEW ===== -->
+                <section class="section show" id="sec-overview">
+                    <div class="page-header">
+                        <div>
+                            <div class="page-title">Overview</div>
+                            <div class="page-sub">OPD queue status — today</div>
+                        </div>
+                        <button
+                            class="btn btn-secondary"
+                            onclick="loadOverview()"
+                        >
+                            Refresh
+                        </button>
+                    </div>
 
-        <!-- ===== STAFF ===== -->
-        <section class="section" id="sec-staff">
-            <div class="page-header">
-                <div>
-                    <div class="page-title">Staff</div>
-                    <div class="page-sub">Reception and nursing staff</div>
-                </div>
-                <button class="btn btn-primary" onclick="openStaffModal()">+ Add Staff</button>
-            </div>
-            <div class="card">
-                <table>
-                    <thead>
-                        <tr><th>Name</th><th>Role</th><th>Username</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody id="staffTableBody">
-                        <tr><td colspan="4" class="empty-cell"><div class="empty-cell-title">No staff added</div></td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-icon blue">
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 18 18"
+                                    fill="none"
+                                >
+                                    <circle
+                                        cx="9"
+                                        cy="9"
+                                        r="7"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                    />
+                                    <path
+                                        d="M9 6v3.5l2 1.5"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                        stroke-linecap="round"
+                                    />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="stat-val" id="ovWaiting">—</div>
+                                <div class="stat-lbl">Waiting</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon amber">
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 18 18"
+                                    fill="none"
+                                >
+                                    <path
+                                        d="M3.5 9h11M11 5.5l3.5 3.5-3.5 3.5"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="stat-val" id="ovCalled">—</div>
+                                <div class="stat-lbl">Being Seen</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon green">
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 18 18"
+                                    fill="none"
+                                >
+                                    <path
+                                        d="M4 9l4 4 7-7"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="stat-val" id="ovCompleted">—</div>
+                                <div class="stat-lbl">Completed</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon red">
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 18 18"
+                                    fill="none"
+                                >
+                                    <path
+                                        d="M5 5l8 8M13 5l-8 8"
+                                        stroke="currentColor"
+                                        stroke-width="1.5"
+                                        stroke-linecap="round"
+                                    />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="stat-val" id="ovNoShow">—</div>
+                                <div class="stat-lbl">No Shows</div>
+                            </div>
+                        </div>
+                    </div>
 
-        <!-- ===== PATIENTS ===== -->
-        <section class="section" id="sec-patients">
-            <div class="page-header">
-                <div>
-                    <div class="page-title">Patients</div>
-                    <div class="page-sub">Registered patient records</div>
-                </div>
-                <button class="btn btn-primary" onclick="openPatientModal()">+ Register Patient</button>
-            </div>
-            <div style="margin-bottom: 1rem;">
-                <input class="search-input" type="text" id="patientSearch" placeholder="Search by NIC or name…" oninput="filterPatients()">
-            </div>
-            <div class="card">
-                <table>
-                    <thead>
-                        <tr><th>NIC</th><th>Full Name</th><th>Gender</th><th>Contact</th><th>Type</th><th>Registered</th></tr>
-                    </thead>
-                    <tbody id="patientTableBody">
-                        <tr><td colspan="6" class="empty-cell"><div class="empty-cell-title">No patients found</div></td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </main>
-</div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">OPD Queue</div>
+                            <button
+                                class="btn btn-primary btn-lg"
+                                onclick="goToQueue()"
+                            >
+                                Manage Queue
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="queue-snapshot">
+                                <div class="qs-item">
+                                    <div class="qs-label">Now Serving</div>
+                                    <div class="qs-val" id="ovServing">—</div>
+                                </div>
+                                <div class="qs-divider"></div>
+                                <div class="qs-item">
+                                    <div class="qs-label">Up Next</div>
+                                    <div class="qs-val muted" id="ovNext">
+                                        —
+                                    </div>
+                                </div>
+                                <div class="qs-divider"></div>
+                                <div class="qs-item">
+                                    <div class="qs-label">Total Waiting</div>
+                                    <div class="qs-val" id="ovTotalWaiting">
+                                        —
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-<!-- Doctor Modal -->
-<div class="modal-overlay" id="doctorModal">
-    <div class="modal">
-        <div class="modal-header">
-            <div class="modal-title" id="doctorModalTitle">Add Doctor</div>
-            <button class="modal-close" onclick="closeDoctorModal()">×</button>
-        </div>
-        <div class="modal-body">
-            <input type="hidden" id="doctorEditId">
-            <div class="form-group">
-                <label class="form-label">Full Name</label>
-                <input class="form-control" type="text" id="doctorName" placeholder="Dr. Full Name">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Specialization</label>
-                <input class="form-control" type="text" id="doctorSpecialization" placeholder="e.g. General Physician">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Room Number</label>
-                <input class="form-control" type="text" id="doctorRoom" placeholder="e.g. Room 101">
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeDoctorModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="saveDoctor()">Save</button>
-        </div>
-    </div>
-</div>
+                <!-- ===== QUEUE CONTROL ===== -->
+                <section class="section" id="sec-queue">
+                    <div class="page-header">
+                        <div>
+                            <div class="page-title">Queue Control</div>
+                            <div class="page-sub">OPD department</div>
+                        </div>
+                        <div class="action-group">
+                            <button
+                                class="btn btn-danger"
+                                onclick="confirmResetQueue()"
+                            >
+                                Reset Queue
+                            </button>
+                            <button
+                                class="btn btn-secondary"
+                                onclick="loadQueue()"
+                            >
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
 
-<!-- Staff Modal -->
-<div class="modal-overlay" id="staffModal">
-    <div class="modal">
-        <div class="modal-header">
-            <div class="modal-title" id="staffModalTitle">Add Staff</div>
-            <button class="modal-close" onclick="closeStaffModal()">×</button>
-        </div>
-        <div class="modal-body">
-            <input type="hidden" id="staffEditId">
-            <div class="form-group">
-                <label class="form-label">Full Name</label>
-                <input class="form-control" type="text" id="staffName" placeholder="Full name">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Role</label>
-                <select class="form-control" id="staffRole">
-                    <option value="RECEPTIONIST">Receptionist</option>
-                    <option value="NURSE">Nurse</option>
-                    <option value="DOCTOR">Doctor</option>
-                    <option value="ADMIN">Admin</option>
-                </select>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Username</label>
-                    <input class="form-control" type="text" id="staffUsername" placeholder="Login username">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input class="form-control" type="password" id="staffPassword" placeholder="Password">
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeStaffModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="saveStaff()">Save</button>
-        </div>
-    </div>
-</div>
+                    <div class="queue-grid">
+                        <div class="now-serving-card">
+                            <div class="ns-label">Now Serving</div>
+                            <div class="ns-ticket idle" id="nsTicket">
+                                No patient called
+                            </div>
+                            <div class="ns-patient" id="nsPatient"></div>
+                            <div class="ns-actions" id="nsActions"></div>
+                        </div>
+                        <button class="call-next-card" onclick="callNext()">
+                            <div class="cn-eyebrow">Action</div>
+                            <div class="cn-text">Call Next Patient</div>
+                            <div class="cn-sub" id="callNextSub">—</div>
+                        </button>
+                    </div>
 
-<!-- Patient Modal -->
-<div class="modal-overlay" id="patientModal">
-    <div class="modal">
-        <div class="modal-header">
-            <div class="modal-title">Register Patient</div>
-            <button class="modal-close" onclick="closePatientModal()">×</button>
-        </div>
-        <div class="modal-body">
-            <div class="form-group">
-                <label class="form-label">NIC Number</label>
-                <input class="form-control" type="text" id="patientNic" placeholder="200012345678" autocomplete="off">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Full Name</label>
-                <input class="form-control" type="text" id="patientFullName" placeholder="Patient full name">
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Date of Birth</label>
-                    <input class="form-control" type="date" id="patientDob">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Gender</label>
-                    <select class="form-control" id="patientGender">
-                        <option value="">Select</option>
-                        <option value="MALE">Male</option>
-                        <option value="FEMALE">Female</option>
-                        <option value="OTHER">Other</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Contact Number</label>
-                    <input class="form-control" type="text" id="patientContact" placeholder="07XXXXXXXX">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Patient Type</label>
-                    <select class="form-control" id="patientType">
-                        <option value="WALK_IN">Walk-in</option>
-                        <option value="PRE_REGISTERED">Pre-registered</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closePatientModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="savePatient()">Register</button>
-        </div>
-    </div>
-</div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Waiting Queue</div>
+                            <span class="badge" id="waitingBadge"
+                                >0 waiting</span
+                            >
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 36px">#</th>
+                                    <th>Ticket</th>
+                                    <th>Patient</th>
+                                    <th>Est. Wait</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="queueTableBody">
+                                <tr>
+                                    <td colspan="6" class="empty-cell">
+                                        <div class="empty-cell-title">
+                                            Queue is empty
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
 
-<script th:src="@{/js/admin.js}"></script>
-</body>
+                <!-- ===== DOCTORS ===== -->
+                <section class="section" id="sec-doctors">
+                    <div class="page-header">
+                        <div>
+                            <div class="page-title">Doctors</div>
+                            <div class="page-sub">OPD medical staff</div>
+                        </div>
+                        <button
+                            class="btn btn-primary"
+                            onclick="openDoctorModal()"
+                        >
+                            + Add Doctor
+                        </button>
+                    </div>
+                    <div class="card">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Specialization</th>
+                                    <th>Room</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="doctorTableBody">
+                                <tr>
+                                    <td colspan="5" class="empty-cell">
+                                        <div class="empty-cell-title">
+                                            No doctors added
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- ===== STAFF ===== -->
+                <section class="section" id="sec-staff">
+                    <div class="page-header">
+                        <div>
+                            <div class="page-title">Staff</div>
+                            <div class="page-sub">
+                                Reception and nursing staff
+                            </div>
+                        </div>
+                        <button
+                            class="btn btn-primary"
+                            onclick="openStaffModal()"
+                        >
+                            + Add Staff
+                        </button>
+                    </div>
+                    <div class="card">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Role</th>
+                                    <th>Username</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="staffTableBody">
+                                <tr>
+                                    <td colspan="4" class="empty-cell">
+                                        <div class="empty-cell-title">
+                                            No staff added
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- ===== PATIENTS ===== -->
+                <section class="section" id="sec-patients">
+                    <div class="page-header">
+                        <div>
+                            <div class="page-title">Patients</div>
+                            <div class="page-sub">
+                                Registered patient records
+                            </div>
+                        </div>
+                        <button
+                            class="btn btn-primary"
+                            onclick="openPatientModal()"
+                        >
+                            + Register Patient
+                        </button>
+                    </div>
+                    <div style="margin-bottom: 1rem">
+                        <input
+                            class="search-input"
+                            type="text"
+                            id="patientSearch"
+                            placeholder="Search by NIC or name…"
+                            oninput="filterPatients()"
+                        />
+                    </div>
+                    <div class="card">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>NIC</th>
+                                    <th>Full Name</th>
+                                    <th>Gender</th>
+                                    <th>Contact</th>
+                                    <th>Type</th>
+                                    <th>Registered</th>
+                                </tr>
+                            </thead>
+                            <tbody id="patientTableBody">
+                                <tr>
+                                    <td colspan="6" class="empty-cell">
+                                        <div class="empty-cell-title">
+                                            No patients found
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination-bar" id="patientPagination" style="display:none">
+                            <span class="pg-info" id="pgInfo"></span>
+                            <div class="pg-controls">
+                                <button class="pg-btn" id="pgPrev" onclick="patientPageChange(-1)">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </button>
+                                <div class="pg-pages" id="pgPages"></div>
+                                <button class="pg-btn" id="pgNext" onclick="patientPageChange(1)">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- Doctor Modal -->
+        <div class="modal-overlay" id="doctorModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <div class="modal-title" id="doctorModalTitle">
+                        Add Doctor
+                    </div>
+                    <button class="modal-close" onclick="closeDoctorModal()">
+                        ×
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="doctorEditId" />
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input
+                            class="form-control"
+                            type="text"
+                            id="doctorName"
+                            placeholder="Dr. Full Name"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Specialization</label>
+                        <input
+                            class="form-control"
+                            type="text"
+                            id="doctorSpecialization"
+                            placeholder="e.g. General Physician"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Room Number</label>
+                        <input
+                            class="form-control"
+                            type="text"
+                            id="doctorRoom"
+                            placeholder="e.g. Room 101"
+                        />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button
+                        class="btn btn-secondary"
+                        onclick="closeDoctorModal()"
+                    >
+                        Cancel
+                    </button>
+                    <button class="btn btn-primary" onclick="saveDoctor()">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Staff Modal -->
+        <div class="modal-overlay" id="staffModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <div class="modal-title" id="staffModalTitle">
+                        Add Staff
+                    </div>
+                    <button class="modal-close" onclick="closeStaffModal()">
+                        ×
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="staffEditId" />
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input
+                            class="form-control"
+                            type="text"
+                            id="staffName"
+                            placeholder="Full name"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Role</label>
+                        <select class="form-control" id="staffRole">
+                            <option value="RECEPTIONIST">Receptionist</option>
+                            <option value="NURSE">Nurse</option>
+                            <option value="DOCTOR">Doctor</option>
+                            <option value="ADMIN">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Username</label>
+                            <input
+                                class="form-control"
+                                type="text"
+                                id="staffUsername"
+                                placeholder="Login username"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <input
+                                class="form-control"
+                                type="password"
+                                id="staffPassword"
+                                placeholder="Password"
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button
+                        class="btn btn-secondary"
+                        onclick="closeStaffModal()"
+                    >
+                        Cancel
+                    </button>
+                    <button class="btn btn-primary" onclick="saveStaff()">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient Modal -->
+        <div class="modal-overlay" id="patientModal">
+            <div class="modal">
+                <div class="modal-header">
+                    <div class="modal-title">Register Patient</div>
+                    <button class="modal-close" onclick="closePatientModal()">
+                        ×
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">NIC Number</label>
+                        <input
+                            class="form-control"
+                            type="text"
+                            id="patientNic"
+                            placeholder="200012345678"
+                            autocomplete="off"
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input
+                            class="form-control"
+                            type="text"
+                            id="patientFullName"
+                            placeholder="Patient full name"
+                        />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Date of Birth</label>
+                            <input
+                                class="form-control"
+                                type="date"
+                                id="patientDob"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gender</label>
+                            <select class="form-control" id="patientGender">
+                                <option value="">Select</option>
+                                <option value="MALE">Male</option>
+                                <option value="FEMALE">Female</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Contact Number</label>
+                            <input
+                                class="form-control"
+                                type="text"
+                                id="patientContact"
+                                placeholder="07XXXXXXXX"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Patient Type</label>
+                            <select class="form-control" id="patientType">
+                                <option value="WALK_IN">Walk-in</option>
+                                <option value="PRE_REGISTERED">
+                                    Pre-registered
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button
+                        class="btn btn-secondary"
+                        onclick="closePatientModal()"
+                    >
+                        Cancel
+                    </button>
+                    <button class="btn btn-primary" onclick="savePatient()">
+                        Register
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirm Dialog -->
+        <div class="modal-overlay" id="confirmModal">
+            <div class="modal confirm-modal">
+                <div class="confirm-modal-header">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" class="confirm-icon">
+                        <path d="M10 3L18 17H2L10 3Z" stroke="#da1e28" stroke-width="1.5" stroke-linejoin="round"/>
+                        <path d="M10 8v4" stroke="#da1e28" stroke-width="1.5" stroke-linecap="round"/>
+                        <circle cx="10" cy="14.5" r="0.75" fill="#da1e28"/>
+                    </svg>
+                    <div class="modal-title" id="confirmTitle"></div>
+                </div>
+                <div class="modal-body">
+                    <p class="confirm-message" id="confirmMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
+                    <button class="btn btn-danger" id="confirmOkBtn">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+        <script th:src="@{/js/admin.js}"></script>
+    </body>
 </html>

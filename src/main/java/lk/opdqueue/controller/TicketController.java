@@ -1,10 +1,9 @@
 package lk.opdqueue.controller;
 
-import lk.opdqueue.entity.QueueTicket;
-import lk.opdqueue.exception.TicketNotFoundException;
 import lk.opdqueue.repository.QueueTicketRepository;
 import lk.opdqueue.service.SlipGeneratorService;
 import lk.opdqueue.util.QRCodeGenerator;
+import lk.opdqueue.exception.TicketNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -42,18 +41,11 @@ public class TicketController {
                 .body(qrBytes);
     }
 
-    @GetMapping("/{ticketNumber}/slip-url")
-    public ResponseEntity<String> getSlipUrl(@PathVariable String ticketNumber) {
-        QueueTicket ticket = ticketRepository.findByTicketNumber(ticketNumber)
-                .orElseThrow(() -> new TicketNotFoundException("Ticket not found: " + ticketNumber));
-        return ResponseEntity.ok(ticket.getSlipR2Key());
-    }
-
     @GetMapping("/{ticketNumber}/slip")
     public ResponseEntity<byte[]> getSlip(@PathVariable String ticketNumber) throws Exception {
-        byte[] pdfBytes = slipGeneratorService.getPdfBytes(ticketNumber);
+        byte[] pdfBytes = slipGeneratorService.generatePdf(ticketNumber);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=slip-" + ticketNumber + ".pdf")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=slip-" + ticketNumber + ".pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdfBytes);
     }

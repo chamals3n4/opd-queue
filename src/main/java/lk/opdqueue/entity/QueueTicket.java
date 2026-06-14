@@ -37,9 +37,6 @@ public class QueueTicket {
     @Column(nullable = false)
     private int estimatedWaitMinutes;
 
-    @Column
-    private String slipR2Key;
-
     @Column(nullable = false, updatable = false)
     private LocalDateTime issuedAt;
 
@@ -77,9 +74,6 @@ public class QueueTicket {
 
     public int getEstimatedWaitMinutes() { return estimatedWaitMinutes; }
     public void setEstimatedWaitMinutes(int estimatedWaitMinutes) { this.estimatedWaitMinutes = estimatedWaitMinutes; }
-
-    public String getSlipR2Key() { return slipR2Key; }
-    public void setSlipR2Key(String slipR2Key) { this.slipR2Key = slipR2Key; }
 
     public LocalDateTime getIssuedAt() { return issuedAt; }
 

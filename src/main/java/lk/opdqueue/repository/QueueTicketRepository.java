@@ -33,4 +33,10 @@ public interface QueueTicketRepository extends JpaRepository<QueueTicket, UUID> 
     Optional<Integer> findMaxTicketSequenceForDate(@Param("date") String date);
 
     List<QueueTicket> findAllByStatusIn(List<TicketStatus> statuses);
+
+    @Query("SELECT q.status, COUNT(q) FROM QueueTicket q GROUP BY q.status")
+    List<Object[]> countGroupByStatus();
+
+    @Query("SELECT COUNT(q) > 0 FROM QueueTicket q WHERE q.patient.id = :patientId AND q.status IN :statuses")
+    boolean existsByPatientIdAndStatusIn(@Param("patientId") java.util.UUID patientId, @Param("statuses") List<TicketStatus> statuses);
 }

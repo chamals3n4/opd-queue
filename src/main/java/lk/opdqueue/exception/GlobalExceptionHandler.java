@@ -27,6 +27,11 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+    @ExceptionHandler(PatientAlreadyInQueueException.class)
+    public ResponseEntity<Map<String, Object>> handlePatientAlreadyInQueue(PatientAlreadyInQueueException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(InvalidTicketStateException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidTicketState(InvalidTicketStateException ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
