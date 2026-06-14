@@ -1,0 +1,230 @@
+/* patient-status.css — Patient self-service status page styles */
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 0 3rem;
+}
+
+/* ── Top bar ── */
+.topbar {
+    width: 100%;
+    background: #005d5d;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 1.25rem;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+    flex-shrink: 0;
+}
+.topbar-name { font-size: 14px; font-weight: 600; color: #fff; }
+.topbar-sub  { font-size: 13px; color: rgba(255,255,255,0.6); margin-left: auto; }
+
+/* ── Card ── */
+.card {
+    background: #fff;
+    width: 100%;
+    max-width: 420px;
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+}
+
+/* ── Card header ── */
+.card-header {
+    background: #005d5d;
+    padding: 2rem 1.5rem 1.75rem;
+    text-align: center;
+    transition: background 0.3s;
+}
+.card-header.called    { background: #b28600; }
+.card-header.emergency { background: #750e13; }
+.header-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 10px;
+}
+.ticket-num {
+    font-size: 1.75rem;
+    font-weight: 300;
+    color: #fff;
+    letter-spacing: 3px;
+    line-height: 1;
+    margin-bottom: 1rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Status badge ── */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+.bdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.status-WAITING     { background: #edf5ff; color: #0043ce; }
+.status-WAITING     .bdot { background: #0043ce; }
+.status-REGISTERED  { background: #f6f2ff; color: #6929c4; }
+.status-REGISTERED  .bdot { background: #6929c4; }
+.status-CALLED      { background: #fdf6dd; color: #8e6a00; animation: pulse 1.5s infinite; }
+.status-CALLED      .bdot { background: #8e6a00; }
+.status-IN_PROGRESS { background: #edf5ff; color: #0043ce; }
+.status-IN_PROGRESS .bdot { background: #0043ce; }
+.status-COMPLETED   { background: #defbe6; color: #044317; }
+.status-COMPLETED   .bdot { background: #24a148; }
+.status-NO_SHOW     { background: #fff1f1; color: #da1e28; }
+.status-NO_SHOW     .bdot { background: #da1e28; }
+.status-CANCELLED   { background: #f4f4f4; color: #525252; }
+.status-CANCELLED   .bdot { background: #8d8d8d; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.6} }
+
+/* ── Called banner ── */
+.called-banner {
+    display: none;
+    background: #fdf6dd;
+    border-bottom: 3px solid #f1c21b;
+    padding: 14px 20px;
+    text-align: center;
+}
+.called-banner.show { display: block; }
+.called-title { font-size: 17px; font-weight: 600; color: #4d3800; }
+.called-sub   { font-size: 13px; color: #4d3800; opacity: 0.75; margin-top: 4px; }
+
+/* ── Connection lost banner ── */
+.connection-lost {
+    background: #fff1f1;
+    border-bottom: 3px solid #da1e28;
+    padding: 8px 20px;
+    text-align: center;
+    font-size: 13px;
+    color: #da1e28;
+    display: none;
+}
+.connection-lost.show { display: block; }
+
+/* ── Stats grid ── */
+.stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: #e0e0e0;
+}
+.stat      { padding: 1.5rem; background: #fff; }
+.stat.full { grid-column: 1 / -1; }
+.stat-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #525252;
+    margin-bottom: 8px;
+}
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 300;
+    color: #161616;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+.stat-value.teal  { color: #005d5d; }
+.stat-value.amber { color: #8e6a00; }
+.stat-value.sm    { font-size: 1.1rem; font-weight: 400; }
+
+/* ── Progress bar ── */
+.progress-section {
+    padding: 1.25rem 1.5rem;
+    background: #fff;
+    border-top: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+}
+.progress-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: #525252;
+}
+.prog-bg   { height: 4px; background: #e0e0e0; }
+.prog-fill { height: 100%; background: #005d5d; transition: width 0.6s ease; }
+.prog-fill.complete { background: #8d8d8d; }
+
+/* ── Dept row ── */
+.dept-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    background: #fff;
+}
+.dept-lbl { font-size: 12px; color: #525252; text-transform: uppercase; letter-spacing: 0.06em; }
+.dept-val { font-size: 14px; font-weight: 500; color: #161616; }
+
+/* ── Share row ── */
+.share-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    background: #f4f4f4;
+    flex-wrap: wrap;
+}
+.share-lbl {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #525252;
+    flex-shrink: 0;
+}
+.share-url {
+    font-size: 12px;
+    color: #005d5d;
+    font-family: 'IBM Plex Mono', monospace;
+    cursor: pointer;
+    word-break: break-all;
+    text-decoration: underline;
+    flex: 1;
+}
+.share-url:hover { color: #004d4d; }
+.share-copied {
+    font-size: 11px;
+    color: #0e6027;
+    font-weight: 500;
+    display: none;
+    flex-shrink: 0;
+}
+.share-copied.show { display: block; }
+
+/* ── Card footer ── */
+.card-footer {
+    padding: 0.875rem 1.5rem;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.live-ind {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #525252;
+}
+.live-dot {
+    width: 7px; height: 7px;
+    background: #24a148;
+    border-radius: 50%;
+    animation: livepulse 2s infinite;
+}
+@keyframes livepulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+.upd-time { font-size: 12px; color: #8d8d8d; }

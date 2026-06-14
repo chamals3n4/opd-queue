@@ -7,6 +7,7 @@ import lk.opdqueue.exception.DepartmentNotFoundException;
 import lk.opdqueue.repository.DepartmentRepository;
 import lk.opdqueue.repository.StaffRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,11 +19,14 @@ public class StaffController {
 
     private final StaffRepository staffRepository;
     private final DepartmentRepository departmentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public StaffController(StaffRepository staffRepository,
-                           DepartmentRepository departmentRepository) {
+                           DepartmentRepository departmentRepository,
+                           PasswordEncoder passwordEncoder) {
         this.staffRepository = staffRepository;
         this.departmentRepository = departmentRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping
@@ -36,15 +40,19 @@ public class StaffController {
         staff.setFullName((String) body.get("fullName"));
         staff.setRole(StaffRole.valueOf((String) body.get("role")));
         staff.setUsername((String) body.get("username"));
-        staff.setPasswordHash((String) body.get("password"));
+        String rawPassword = (String) body.get("password");
+        if (rawPassword != null && !rawPassword.isBlank()) {
+            staff.setPasswordHash(passwordEncoder.encode(rawPassword));
+        }
 
         Long deptId = body.get("departmentId") != null
                 ? ((Number) body.get("departmentId")).longValue() : null;
-        if (deptId != null) {
-            Department dept = departmentRepository.findById(deptId)
-                    .orElseThrow(() -> new DepartmentNotFoundException("Department not found: " + deptId));
-            staff.setDepartment(dept);
-        }
+        Department dept = deptId != null
+                ? departmentRepository.findById(deptId)
+                    .orElseThrow(() -> new DepartmentNotFoundException("Department not found: " + deptId))
+                : departmentRepository.findAll().stream().findFirst()
+                    .orElseThrow(() -> new DepartmentNotFoundException("No departments exist"));
+        staff.setDepartment(dept);
         return ResponseEntity.ok(staffRepository.save(staff));
     }
 
@@ -56,7 +64,8 @@ public class StaffController {
         if (body.containsKey("role")) staff.setRole(StaffRole.valueOf((String) body.get("role")));
         if (body.containsKey("username")) staff.setUsername((String) body.get("username"));
         if (body.containsKey("password") && body.get("password") != null) {
-            staff.setPasswordHash((String) body.get("password"));
+            String pw = (String) body.get("password");
+            if (!pw.isBlank()) staff.setPasswordHash(passwordEncoder.encode(pw));
         }
         if (body.containsKey("departmentId") && body.get("departmentId") != null) {
             Long deptId = ((Number) body.get("departmentId")).longValue();

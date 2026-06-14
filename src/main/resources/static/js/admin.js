@@ -1,0 +1,368 @@
+let opdDeptId = null;
+let allPatients = [];
+
+async function apiFetch(url, opts = {}) {
+    const res = await fetch(url, opts);
+    if (res.status === 401 || res.status === 403) {
+        window.location.href = '/login';
+        throw new Error('Session expired');
+    }
+    return res;
+}
+
+// ── Tab switching ──────────────────────────────────────────────
+document.querySelectorAll('.sidebar-item[data-tab]').forEach(item => {
+    item.addEventListener('click', () => {
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('show'));
+        document.getElementById('sec-' + item.dataset.tab).classList.add('show');
+        switch (item.dataset.tab) {
+            case 'overview':  loadOverview(); break;
+            case 'queue':     loadQueue();    break;
+            case 'doctors':   loadDoctors();  break;
+            case 'staff':     loadStaff();    break;
+            case 'patients':  loadPatients(); break;
+        }
+    });
+});
+
+function goToQueue() { document.querySelector('[data-tab="queue"]').click(); }
+
+// ── Init ───────────────────────────────────────────────────────
+async function init() {
+    try {
+        const depts = await fetch('/api/departments').then(r => r.json());
+        if (depts.length) opdDeptId = depts[0].id;
+    } catch {}
+    await loadOverview();
+}
+
+// ── Overview ───────────────────────────────────────────────────
+async function loadOverview() {
+    await Promise.all([loadStats(), loadQueueSnapshot()]);
+}
+
+async function loadStats() {
+    try {
+        const tickets = await apiFetch('/api/admin/tickets/all').then(r => r.json());
+        document.getElementById('ovWaiting').textContent   = tickets.filter(t => t.status === 'WAITING' || t.status === 'REGISTERED').length;
+        document.getElementById('ovCalled').textContent    = tickets.filter(t => t.status === 'CALLED'  || t.status === 'IN_PROGRESS').length;
+        document.getElementById('ovCompleted').textContent = tickets.filter(t => t.status === 'COMPLETED').length;
+        document.getElementById('ovNoShow').textContent    = tickets.filter(t => t.status === 'NO_SHOW').length;
+    } catch {}
+}
+
+async function loadQueueSnapshot() {
+    if (!opdDeptId) return;
+    try {
+        const board = await apiFetch(`/api/display/${opdDeptId}`).then(r => r.json());
+        const serving = board.currentlyCalledTicket && board.currentlyCalledTicket !== '-' ? board.currentlyCalledTicket : '—';
+        document.getElementById('ovServing').textContent = serving;
+        const nexts = (board.nextTickets || []).filter(t => t !== board.currentlyCalledTicket);
+        document.getElementById('ovNext').textContent = nexts.length ? nexts.slice(0, 3).join(', ') : 'None';
+        document.getElementById('ovTotalWaiting').textContent = board.totalWaiting ?? '—';
+    } catch {}
+}
+
+// ── Queue ──────────────────────────────────────────────────────
+async function loadQueue() {
+    if (!opdDeptId) { await init(); return; }
+    try {
+        const [allActive, waiting] = await Promise.all([
+            apiFetch('/api/admin/tickets/active').then(r => r.json()),
+            apiFetch(`/api/queue/department/${opdDeptId}`).then(r => r.json())
+        ]);
+
+        const called = allActive.find(t => t.status === 'CALLED' || t.status === 'IN_PROGRESS') || null;
+        updateNowServing(called);
+
+        document.getElementById('waitingBadge').textContent = `${waiting.length} waiting`;
+        document.getElementById('callNextSub').textContent = waiting.length
+            ? `${waiting.length} patient${waiting.length !== 1 ? 's' : ''} in queue`
+            : 'Queue is empty';
+
+        const tbody = document.getElementById('queueTableBody');
+        if (!waiting.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-cell"><div class="empty-cell-title">Queue is empty</div><div style="color:#9ca3af;font-size:12px;margin-top:2px">No patients currently waiting</div></td></tr>';
+            return;
+        }
+        tbody.innerHTML = waiting.map((t, i) => {
+            const emerg = t.emergency || t.isEmergency;
+            const actions = [
+                (t.status === 'CALLED' || t.status === 'IN_PROGRESS') ? `<button class="btn btn-info" onclick="completeTicket('${t.ticketNumber}')">Complete</button>` : '',
+                (t.status === 'CALLED' || t.status === 'WAITING')     ? `<button class="btn btn-warning" onclick="noShowTicket('${t.ticketNumber}')">No Show</button>` : '',
+            ].filter(Boolean).join('');
+            return `<tr>
+                <td style="color:#9ca3af;font-size:12px">${i + 1}</td>
+                <td>
+                    <span class="ticket-num">${t.ticketNumber}</span>
+                    ${emerg ? '<span class="emerg-tag" style="margin-left:6px">EMRG</span>' : ''}
+                </td>
+                <td>${t.patient?.fullName || '—'}</td>
+                <td style="color:#6b7280">${t.estimatedWaitMinutes} min</td>
+                <td><span class="pill pill-${t.status}">${t.status.replace(/_/g, ' ')}</span></td>
+                <td><div class="action-group">${actions || '<span style="color:#d1d5db">—</span>'}</div></td>
+            </tr>`;
+        }).join('');
+    } catch {
+        document.getElementById('queueTableBody').innerHTML =
+            '<tr><td colspan="6" class="empty-cell"><div class="empty-cell-title">Failed to load queue</div></td></tr>';
+    }
+}
+
+function updateNowServing(ticket) {
+    const nsTicket  = document.getElementById('nsTicket');
+    const nsPatient = document.getElementById('nsPatient');
+    const nsActions = document.getElementById('nsActions');
+    if (ticket) {
+        nsTicket.textContent  = ticket.ticketNumber;
+        nsTicket.className    = 'ns-ticket';
+        nsPatient.textContent = ticket.patient?.fullName || '—';
+        nsActions.innerHTML   = `
+            <button class="btn btn-primary" onclick="completeTicket('${ticket.ticketNumber}')">Mark Complete</button>
+            <button class="btn btn-warning" onclick="noShowTicket('${ticket.ticketNumber}')">No Show</button>`;
+    } else {
+        nsTicket.textContent  = 'No patient called';
+        nsTicket.className    = 'ns-ticket idle';
+        nsPatient.textContent = '';
+        nsActions.innerHTML   = '';
+    }
+}
+
+// ── Queue operations ───────────────────────────────────────────
+async function callNext() {
+    if (!opdDeptId) return;
+    try {
+        const res = await apiFetch(`/api/queue/call-next/${opdDeptId}`, { method: 'POST' });
+        if (!res.ok) { const e = await res.json(); throw new Error(e.message); }
+        const t = await res.json();
+        toast(`Called: ${t.ticketNumber}`, 'success');
+        loadQueue(); loadStats(); loadQueueSnapshot();
+    } catch (e) { toast(e.message || 'No patients waiting', 'danger'); }
+}
+
+async function completeTicket(tn) {
+    try {
+        await apiFetch(`/api/queue/complete/${tn}`, { method: 'POST' });
+        toast(`Completed: ${tn}`, 'success');
+        loadQueue(); loadStats(); loadQueueSnapshot();
+    } catch { toast('Failed', 'danger'); }
+}
+
+async function noShowTicket(tn) {
+    try {
+        await apiFetch(`/api/queue/no-show/${tn}`, { method: 'POST' });
+        toast(`No-show recorded: ${tn}`, 'success');
+        loadQueue(); loadStats(); loadQueueSnapshot();
+    } catch { toast('Failed', 'danger'); }
+}
+
+async function confirmResetQueue() {
+    if (!confirm('Reset the OPD queue? All waiting tickets will be cancelled.')) return;
+    try {
+        await apiFetch(`/api/queue/reset/${opdDeptId}`, { method: 'POST' });
+        toast('Queue reset', 'success');
+        loadQueue(); loadOverview();
+    } catch { toast('Failed', 'danger'); }
+}
+
+// ── Doctors ────────────────────────────────────────────────────
+async function loadDoctors() {
+    try {
+        const docs = await apiFetch('/api/doctors').then(r => r.json());
+        const tbody = document.getElementById('doctorTableBody');
+        tbody.innerHTML = docs.length ? docs.map(d => `<tr>
+            <td><strong>${d.fullName}</strong></td>
+            <td style="color:#6b7280">${d.specialization}</td>
+            <td style="color:#6b7280">${d.roomNumber}</td>
+            <td><span class="pill ${d.available ? 'pill-avail' : 'pill-unavail'}">${d.available ? 'Available' : 'Unavailable'}</span></td>
+            <td><div class="action-group">
+                <button class="btn btn-secondary" onclick="editDoctor(${d.id})">Edit</button>
+                <button class="btn ${d.available ? 'btn-warning' : 'btn-secondary'}" onclick="toggleDoctorAvail(${d.id},${!d.available})">${d.available ? 'Set Unavailable' : 'Set Available'}</button>
+                <button class="btn btn-danger" onclick="deleteDoctor(${d.id})">Remove</button>
+            </div></td>
+        </tr>`).join('') : '<tr><td colspan="5" class="empty-cell"><div class="empty-cell-title">No doctors added</div></td></tr>';
+    } catch {}
+}
+
+function openDoctorModal(doc) {
+    document.getElementById('doctorEditId').value           = doc ? doc.id : '';
+    document.getElementById('doctorName').value             = doc ? doc.fullName : '';
+    document.getElementById('doctorSpecialization').value   = doc ? doc.specialization : '';
+    document.getElementById('doctorRoom').value             = doc ? doc.roomNumber : '';
+    document.getElementById('doctorModalTitle').textContent = doc ? 'Edit Doctor' : 'Add Doctor';
+    document.getElementById('doctorModal').classList.add('open');
+}
+function closeDoctorModal() { document.getElementById('doctorModal').classList.remove('open'); }
+
+async function editDoctor(id) {
+    const docs = await apiFetch('/api/doctors').then(r => r.json()).catch(() => []);
+    const d = docs.find(x => x.id === id);
+    if (d) openDoctorModal(d);
+}
+
+async function saveDoctor() {
+    const id             = document.getElementById('doctorEditId').value;
+    const fullName       = document.getElementById('doctorName').value.trim();
+    const specialization = document.getElementById('doctorSpecialization').value.trim();
+    const roomNumber     = document.getElementById('doctorRoom').value.trim();
+    if (!fullName || !specialization || !roomNumber) { toast('All fields are required', 'danger'); return; }
+    try {
+        const isEdit = !!id;
+        const body   = { fullName, specialization, roomNumber };
+        if (opdDeptId) body.departmentId = opdDeptId;
+        const res = await apiFetch(isEdit ? `/api/doctors/${id}` : '/api/doctors', {
+            method: isEdit ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error();
+        closeDoctorModal();
+        toast(isEdit ? 'Doctor updated' : 'Doctor added', 'success');
+        loadDoctors();
+    } catch { toast('Failed to save', 'danger'); }
+}
+
+async function toggleDoctorAvail(id, avail) {
+    try {
+        await apiFetch(`/api/doctors/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ isAvailable: avail }) });
+        toast(avail ? 'Doctor is now available' : 'Doctor set as unavailable', 'success');
+        loadDoctors();
+    } catch { toast('Failed', 'danger'); }
+}
+
+async function deleteDoctor(id) {
+    if (!confirm('Remove this doctor?')) return;
+    try { await apiFetch(`/api/doctors/${id}`, { method: 'DELETE' }); toast('Doctor removed', 'success'); loadDoctors(); }
+    catch { toast('Failed', 'danger'); }
+}
+
+// ── Staff ──────────────────────────────────────────────────────
+async function loadStaff() {
+    try {
+        const staff = await apiFetch('/api/staff').then(r => r.json());
+        const tbody = document.getElementById('staffTableBody');
+        tbody.innerHTML = staff.length ? staff.map(s => `<tr>
+            <td><strong>${s.fullName}</strong></td>
+            <td style="color:#6b7280">${(s.role || '').replace(/_/g, ' ')}</td>
+            <td style="color:#6b7280;font-variant-numeric:tabular-nums">${s.username}</td>
+            <td><div class="action-group">
+                <button class="btn btn-secondary" onclick="editStaff(${s.id})">Edit</button>
+                <button class="btn btn-danger" onclick="deleteStaff(${s.id})">Remove</button>
+            </div></td>
+        </tr>`).join('') : '<tr><td colspan="4" class="empty-cell"><div class="empty-cell-title">No staff added</div></td></tr>';
+    } catch {}
+}
+
+function openStaffModal(sta) {
+    document.getElementById('staffEditId').value           = sta ? sta.id : '';
+    document.getElementById('staffName').value             = sta ? sta.fullName : '';
+    document.getElementById('staffRole').value             = sta ? sta.role : 'RECEPTIONIST';
+    document.getElementById('staffUsername').value         = sta ? sta.username : '';
+    document.getElementById('staffPassword').value         = '';
+    document.getElementById('staffModalTitle').textContent = sta ? 'Edit Staff' : 'Add Staff';
+    document.getElementById('staffModal').classList.add('open');
+}
+function closeStaffModal() { document.getElementById('staffModal').classList.remove('open'); }
+
+async function editStaff(id) {
+    const arr = await apiFetch('/api/staff').then(r => r.json()).catch(() => []);
+    const s = arr.find(x => x.id === id);
+    if (s) openStaffModal(s);
+}
+
+async function saveStaff() {
+    const id       = document.getElementById('staffEditId').value;
+    const fullName = document.getElementById('staffName').value.trim();
+    const role     = document.getElementById('staffRole').value;
+    const username = document.getElementById('staffUsername').value.trim();
+    const password = document.getElementById('staffPassword').value;
+    if (!fullName || !username || (!id && !password)) { toast('All fields required', 'danger'); return; }
+    try {
+        const isEdit = !!id;
+        const body   = { fullName, role, username };
+        if (opdDeptId) body.departmentId = opdDeptId;
+        if (password) body.password = password;
+        const res = await apiFetch(isEdit ? `/api/staff/${id}` : '/api/staff', {
+            method: isEdit ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error();
+        closeStaffModal();
+        toast(isEdit ? 'Staff updated' : 'Staff added', 'success');
+        loadStaff();
+    } catch { toast('Failed to save', 'danger'); }
+}
+
+async function deleteStaff(id) {
+    if (!confirm('Remove this staff member?')) return;
+    try { await apiFetch(`/api/staff/${id}`, { method: 'DELETE' }); toast('Staff removed', 'success'); loadStaff(); }
+    catch { toast('Failed', 'danger'); }
+}
+
+// ── Patients ───────────────────────────────────────────────────
+async function loadPatients() {
+    try { allPatients = await apiFetch('/api/admin/patients').then(r => r.json()); renderPatients(allPatients); } catch {}
+}
+
+function filterPatients() {
+    const q = document.getElementById('patientSearch').value.toLowerCase();
+    renderPatients(allPatients.filter(p => (p.nic || '').toLowerCase().includes(q) || (p.fullName || '').toLowerCase().includes(q)));
+}
+
+function renderPatients(list) {
+    const tbody = document.getElementById('patientTableBody');
+    tbody.innerHTML = list.length ? list.map(p => `<tr>
+        <td style="font-variant-numeric:tabular-nums;font-weight:600;color:#005d5d">${p.nic}</td>
+        <td><strong>${p.fullName}</strong></td>
+        <td style="color:#6b7280">${p.gender || '—'}</td>
+        <td style="color:#6b7280">${p.contactNumber}</td>
+        <td><span class="pill ${p.patientType === 'WALK_IN' ? 'pill-WAITING' : 'pill-COMPLETED'}">${(p.patientType || '').replace(/_/g, ' ')}</span></td>
+        <td style="color:#9ca3af;font-size:12px">${p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '—'}</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="empty-cell"><div class="empty-cell-title">No patients found</div></td></tr>';
+}
+
+function openPatientModal() {
+    document.getElementById('patientNic').value       = '';
+    document.getElementById('patientFullName').value  = '';
+    document.getElementById('patientDob').value       = '';
+    document.getElementById('patientGender').value    = '';
+    document.getElementById('patientContact').value   = '';
+    document.getElementById('patientType').value      = 'WALK_IN';
+    document.getElementById('patientModal').classList.add('open');
+    document.getElementById('patientNic').focus();
+}
+function closePatientModal() { document.getElementById('patientModal').classList.remove('open'); }
+
+async function savePatient() {
+    const body = {
+        nic:           document.getElementById('patientNic').value.trim(),
+        fullName:      document.getElementById('patientFullName').value.trim(),
+        dateOfBirth:   document.getElementById('patientDob').value,
+        gender:        document.getElementById('patientGender').value,
+        contactNumber: document.getElementById('patientContact').value.trim(),
+        patientType:   document.getElementById('patientType').value,
+    };
+    if (!body.nic || !body.fullName) { toast('NIC and full name are required', 'danger'); return; }
+    try {
+        const res = await apiFetch('/api/patients/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if (!res.ok) { const err = await res.json(); throw new Error(err.message || err.error); }
+        closePatientModal();
+        toast('Patient registered successfully', 'success');
+        loadPatients();
+    } catch (err) { toast(err.message || 'Registration failed', 'danger'); }
+}
+
+// ── Toast ──────────────────────────────────────────────────────
+function toast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className   = `toast show toast-${type}`;
+    setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+// ── Boot ───────────────────────────────────────────────────────
+init();
+setInterval(loadOverview, 30000);

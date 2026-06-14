@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Shell nav fragment — Carbon 48px teal top bar.
+  Usage:
+    <nav th:replace="~{fragments/nav :: nav(section='Reception', links=~{::nav-links-block})}">
+      <th:block th:ref="nav-links-block">
+        <a href="/admin" class="shell-link">Admin Panel</a>
+        <a href="/display/1" class="shell-link primary" target="_blank">Display Board</a>
+      </th:block>
+    </nav>
+-->
+<nav class="shell-nav" th:fragment="nav(section, links)">
+    <div class="shell-logo">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <rect x="2" y="2" width="16" height="16" stroke="#fff" stroke-width="1.5"/>
+            <path d="M10 6v8M6 10h8" stroke="#fff" stroke-width="1.5" stroke-linecap="square"/>
+        </svg>
+        <span class="shell-logo-text">OPD Queue</span>
+    </div>
+    <div class="shell-divider"></div>
+    <span class="shell-section" th:text="${section}"></span>
+    <div class="shell-spacer"></div>
+    <div class="shell-links">
+        <th:block th:replace="${links}"/>
+    </div>
+</nav>
+
+</body>
+</html>

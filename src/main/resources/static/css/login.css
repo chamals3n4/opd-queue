@@ -1,0 +1,114 @@
+/* ── Login page ── */
+html, body { height: 100%; }
+
+body.login-page {
+    background: #161616;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.login-header {
+    height: 48px;
+    background: #005d5d;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    flex-shrink: 0;
+}
+
+.login-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.login-logo-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.01em;
+}
+
+.login-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.login-card {
+    background: #fff;
+    width: 100%;
+    max-width: 400px;
+    padding: 2.5rem 2rem 2rem;
+}
+
+.login-title {
+    font-size: 28px;
+    font-weight: 300;
+    color: #161616;
+    margin-bottom: 4px;
+}
+
+.login-subtitle {
+    font-size: 14px;
+    color: #6f6f6f;
+    margin-bottom: 2rem;
+}
+
+.login-alert {
+    padding: 12px 16px;
+    font-size: 14px;
+    margin-bottom: 1.5rem;
+    border-left: 3px solid;
+}
+
+.login-alert-error {
+    background: #ffd7d9;
+    color: #a2191f;
+    border-color: #da1e28;
+}
+
+.login-alert-success {
+    background: #defbe6;
+    color: #0e6027;
+    border-color: #24a148;
+}
+
+.login-form .form-group { margin-bottom: 1.25rem; }
+
+.login-actions {
+    margin-top: 2rem;
+}
+
+.login-actions .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 16px;
+    font-size: 14px;
+}
+
+.login-footer {
+    padding: 1.5rem;
+    text-align: center;
+    font-size: 12px;
+    color: #6f6f6f;
+    border-top: 1px solid #e0e0e0;
+    background: #f4f4f4;
+    margin-top: -1px;
+}
+
+.login-bg-text {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    font-size: 72px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.04);
+    pointer-events: none;
+    line-height: 1;
+    letter-spacing: -2px;
+    user-select: none;
+}

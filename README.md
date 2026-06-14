@@ -6,7 +6,6 @@ A real-time outpatient department (OPD) queue management system for hospitals. P
 
 - **Patient registration** - walk-in and pre-registered patients
 - **Queue ticket issuance** - with department selection, emergency priority, and print slip generation
-
 - **Live display board** - shows "Now Serving", up-next list, and waiting count with real-time updates
 - **Patient status page** - patients scan a QR code to see their position, people ahead, and estimated wait time
 - **Admin panel** - manage departments, doctors, staff; call next, complete, and mark no-show

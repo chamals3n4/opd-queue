@@ -4,442 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reception — OPD Queue</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #f8fafc;
-            color: #0f172a;
-            min-height: 100vh;
-            font-size: 16px;
-        }
-        nav {
-            background: #fff;
-            border-bottom: 2px solid #e2e8f0;
-            padding: 0 2rem;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .nav-brand {
-            font-size: 20px;
-            font-weight: 700;
-            color: #166534;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .nav-brand .badge {
-            font-size: 12px;
-            font-weight: 600;
-            background: #dcfce7;
-            color: #166534;
-            padding: 3px 10px;
-            border-radius: 20px;
-        }
-        .nav-links { display: flex; gap: 8px; }
-        .btn-board {
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            background: #166534;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-        .btn-outline-nav {
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            color: #64748b;
-            border: 2px solid #e2e8f0;
-            padding: 8px 16px;
-            border-radius: 10px;
-            cursor: pointer;
-            text-decoration: none;
-            background: #fff;
-        }
-        .btn-outline-nav:hover { background: #f1f5f9; }
-        .layout {
-            display: grid;
-            grid-template-columns: 480px 1fr;
-            gap: 0;
-            height: calc(100vh - 64px);
-            overflow: hidden;
-        }
-        .panel {
-            overflow-y: auto;
-            padding: 2rem;
-        }
-        .panel-left { border-right: 2px solid #e2e8f0; background: #fff; }
-        .panel-right { background: #f8fafc; }
-        .section-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 2px solid #e2e8f0;
-        }
-        .card {
-            background: #fff;
-            border: 2px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 6px;
-        }
-        input, select {
-            width: 100%;
-            font-family: 'Inter', sans-serif;
-            font-size: 16px;
-            font-weight: 500;
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            color: #0f172a;
-            padding: 12px 16px;
-            outline: none;
-            appearance: none;
-            transition: border-color 0.15s;
-            margin-bottom: 16px;
-        }
-        input:focus, select:focus { border-color: #16a34a; background: #fff; }
-        input::placeholder { color: #94a3b8; }
-        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .btn-primary {
-            width: 100%;
-            font-family: 'Inter', sans-serif;
-            font-size: 16px;
-            font-weight: 700;
-            background: #16a34a;
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            padding: 14px;
-            cursor: pointer;
-            transition: background 0.15s;
-            margin-top: 4px;
-        }
-        .btn-primary:hover { background: #15803d; }
-        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
-        .btn-outline {
-            width: 100%;
-            font-family: 'Inter', sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-            background: #fff;
-            color: #374151;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 14px;
-            cursor: pointer;
-            transition: all 0.15s;
-            margin-top: 8px;
-        }
-        .btn-outline:hover { border-color: #94a3b8; background: #f8fafc; }
-        .lookup-row { display: flex; gap: 10px; margin-bottom: 16px; }
-        .lookup-row input { margin-bottom: 0; flex: 1; }
-        .btn-lookup {
-            font-family: 'Inter', sans-serif;
-            font-size: 15px;
-            font-weight: 600;
-            background: #0f172a;
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            padding: 12px 20px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .btn-lookup:hover { background: #1e293b; }
-        .patient-pill {
-            display: none;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 16px;
-            background: #f0fdf4;
-            border: 2px solid #86efac;
-            border-radius: 10px;
-            margin-bottom: 16px;
-        }
-        .patient-pill.show { display: flex; }
-        .patient-pill .avatar {
-            width: 42px; height: 42px;
-            background: #dcfce7;
-            color: #166534;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700;
-            font-size: 16px;
-            flex-shrink: 0;
-        }
-        .patient-pill .pname { font-size: 16px; font-weight: 700; color: #166534; }
-        .patient-pill .pnic { font-size: 13px; color: #4ade80; font-weight: 500; }
-        .dept-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-        .dept-btn {
-            padding: 16px;
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            cursor: pointer;
-            text-align: left;
-            transition: all 0.15s;
-            font-family: 'Inter', sans-serif;
-        }
-        .dept-btn:hover { border-color: #86efac; background: #f0fdf4; }
-        .dept-btn.selected { border-color: #16a34a; background: #f0fdf4; }
-        .dept-btn .dname { font-size: 15px; font-weight: 600; color: #0f172a; display: block; }
-        .dept-btn .dtype { font-size: 12px; color: #64748b; margin-top: 3px; display: block; }
-        .dept-btn.selected .dname { color: #166534; }
-        .emergency-row {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 16px;
-            background: #fff7ed;
-            border: 2px solid #fed7aa;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.15s;
-        }
-        .emergency-row.active { background: #fef2f2; border-color: #fca5a5; }
-        .emergency-chk {
-            width: 24px; height: 24px;
-            border-radius: 6px;
-            border: 2px solid #d1d5db;
-            background: #fff;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            transition: all 0.15s;
-        }
-        .emergency-row.active .emergency-chk { background: #dc2626; border-color: #dc2626; }
-        .emergency-chk svg { display: none; }
-        .emergency-row.active .emergency-chk svg { display: block; }
-        .emergency-txt .etitle { font-size: 16px; font-weight: 700; color: #92400e; }
-        .emergency-row.active .emergency-txt .etitle { color: #dc2626; }
-        .emergency-txt .esub { font-size: 13px; color: #a16207; margin-top: 2px; }
-        .alert {
-            padding: 12px 16px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            display: none;
-            margin-top: 12px;
-        }
-        .alert.show { display: block; }
-        .alert-success { background: #f0fdf4; color: #166534; border: 2px solid #86efac; }
-        .alert-danger { background: #fef2f2; color: #dc2626; border: 2px solid #fca5a5; }
-        .alert-warning { background: #fffbeb; color: #b45309; border: 2px solid #fcd34d; }
-
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 4rem 2rem;
-            text-align: center;
-            color: #94a3b8;
-            gap: 12px;
-        }
-        .empty-state .eico { font-size: 4rem; }
-        .empty-state .etitle { font-size: 18px; font-weight: 600; color: #64748b; }
-        .empty-state .esub { font-size: 15px; color: #94a3b8; max-width: 280px; line-height: 1.6; }
-
-        /* PRINT MODAL */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(2px);
-        }
-        .modal-overlay.show { display: flex; }
-        .print-modal {
-            background: #fff;
-            border-radius: 24px;
-            width: 90%;
-            max-width: 420px;
-            overflow: hidden;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.25);
-            animation: modalIn 0.3s ease;
-        }
-        @keyframes modalIn {
-            from { transform: scale(0.92); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        .print-header {
-            padding: 2rem 2rem 1.5rem;
-            text-align: center;
-        }
-        .print-header.emergency { background: #fef2f2; }
-        .print-header .ph-label {
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #94a3b8;
-            margin-bottom: 12px;
-        }
-        .print-header .ph-ticket {
-            font-size: 3.5rem;
-            font-weight: 900;
-            color: #166534;
-            letter-spacing: 3px;
-            line-height: 1;
-            font-variant-numeric: tabular-nums;
-        }
-        .print-header.emergency .ph-ticket { color: #dc2626; }
-        .print-emerg-badge {
-            display: none;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: #dc2626;
-            background: #fee2e2;
-            padding: 5px 16px;
-            border-radius: 20px;
-            width: fit-content;
-            margin: 10px auto 0;
-        }
-        .print-emerg-badge.show { display: block; }
-        .print-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-        }
-        .print-detail {
-            padding: 1.25rem;
-            border-right: 2px solid #f1f5f9;
-            border-bottom: 2px solid #f1f5f9;
-            text-align: center;
-        }
-        .print-detail:nth-child(even) { border-right: none; }
-        .print-detail .pd-val {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: #0f172a;
-            display: block;
-        }
-        .print-detail .pd-lbl {
-            font-size: 12px;
-            font-weight: 600;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 4px;
-            display: block;
-        }
-        .print-meta {
-            padding: 1.25rem;
-            border-bottom: 2px solid #f1f5f9;
-        }
-        .print-meta-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-        }
-        .print-meta-row:first-child { padding-top: 0; }
-        .print-meta-row .pm-lbl { font-size: 13px; font-weight: 600; color: #94a3b8; }
-        .print-meta-row .pm-val { font-size: 14px; font-weight: 700; color: #0f172a; }
-        .print-actions {
-            padding: 1.25rem;
-            display: flex;
-            gap: 10px;
-        }
-        .btn-print {
-            flex: 1;
-            font-family: 'Inter', sans-serif;
-            font-size: 16px;
-            font-weight: 700;
-            background: #166534;
-            color: #fff;
-            border: none;
-            border-radius: 12px;
-            padding: 14px;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-        .btn-print:hover { background: #15803d; }
-        .btn-print.emergency { background: #dc2626; }
-        .btn-print.emergency:hover { background: #b91c1c; }
-        .btn-close-modal {
-            flex: 1;
-            font-family: 'Inter', sans-serif;
-            font-size: 16px;
-            font-weight: 600;
-            background: #f1f5f9;
-            color: #374151;
-            border: none;
-            border-radius: 12px;
-            padding: 14px;
-            cursor: pointer;
-        }
-        .btn-close-modal:hover { background: #e2e8f0; }
-        .qr-section {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-        .qr-preview {
-            width: 120px;
-            height: 120px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-        }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/carbon.css}">
+    <link rel="stylesheet" th:href="@{/css/reception.css}">
 </head>
 <body>
-<nav>
-    <div class="nav-brand">
-        OPD Queue
-        <span class="badge">Reception</span>
-    </div>
-    <div class="nav-links">
-        <a href="/admin" class="btn-outline-nav">Admin Panel</a>
-        <a href="/display/1" class="btn-board" target="_blank">Display Board</a>
-    </div>
+
+<nav th:replace="~{fragments/nav :: nav(section='Reception', links=~{::reception-nav-links})}">
+    <th:block th:ref="reception-nav-links">
+        <a href="/admin" class="shell-link">Admin Panel</a>
+        <a href="/display/1" class="shell-link primary" target="_blank">Display Board</a>
+        <form th:action="@{/logout}" method="post" style="margin:0;height:48px;display:flex">
+            <button type="submit" class="shell-link" style="border-left:1px solid rgba(255,255,255,0.2);color:#fff;background:#da1e28;">Sign out</button>
+        </form>
+    </th:block>
 </nav>
 
 <div class="layout">
     <div class="panel panel-left">
-        <div class="section-title">Register Patient</div>
+        <div class="section-heading">Register Patient</div>
         <form id="registerForm">
-            <label>NIC Number</label>
-            <input type="text" name="nic" placeholder="200012345678" autocomplete="off" required>
-            <label>Full Name</label>
-            <input type="text" name="fullName" placeholder="Patient full name" required>
+            <div class="field">
+                <label>NIC Number</label>
+                <input type="text" name="nic" placeholder="200012345678" autocomplete="off" required>
+            </div>
+            <div class="field">
+                <label>Full Name</label>
+                <input type="text" name="fullName" placeholder="Patient full name" required>
+            </div>
             <div class="row">
-                <div>
+                <div class="field">
                     <label>Date of Birth</label>
                     <input type="date" name="dateOfBirth" required>
                 </div>
-                <div>
+                <div class="field">
                     <label>Gender</label>
                     <select name="gender" required>
                         <option value="">Select</option>
@@ -450,11 +48,11 @@
                 </div>
             </div>
             <div class="row">
-                <div>
+                <div class="field">
                     <label>Contact</label>
                     <input type="text" name="contactNumber" placeholder="07XXXXXXXX" required>
                 </div>
-                <div>
+                <div class="field">
                     <label>Patient Type</label>
                     <select name="patientType" required>
                         <option value="">Select</option>
@@ -463,19 +61,19 @@
                     </select>
                 </div>
             </div>
-            <button type="submit" class="btn-primary">Register Patient</button>
+            <button type="submit" class="btn btn-primary btn-full">Register Patient</button>
         </form>
         <div id="registerAlert" class="alert"></div>
     </div>
 
     <div class="panel panel-right">
-        <div class="section-title">Issue Queue Ticket</div>
+        <div class="section-heading">Issue Queue Ticket</div>
 
-        <div class="card">
-            <label>Find Patient by NIC</label>
+        <div class="tile">
+            <div class="tile-heading">Find Patient by NIC</div>
             <div class="lookup-row">
                 <input type="text" id="lookupNic" placeholder="Enter NIC number">
-                <button class="btn-lookup" id="lookupBtn">Search</button>
+                <button class="btn" id="lookupBtn">Search</button>
             </div>
 
             <div class="patient-pill" id="patientPill">
@@ -486,16 +84,20 @@
                 </div>
             </div>
 
-            <label>Select Department</label>
-            <div class="dept-grid" id="deptGrid">
-                <div style="grid-column:1/-1;text-align:center;padding:1rem;color:#94a3b8;font-size:15px">Loading...</div>
+            <div class="dept-info">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <rect x="1.5" y="1.5" width="13" height="13" stroke="#525252" stroke-width="1.2"/>
+                    <path d="M8 5v6M5 8h6" stroke="#525252" stroke-width="1.2" stroke-linecap="square"/>
+                </svg>
+                <span class="di-label">Department</span>
+                <span class="di-name">OPD</span>
             </div>
             <input type="hidden" id="selectedDeptId">
 
             <div class="emergency-row" id="emergencyRow">
                 <div class="emergency-chk" id="emergencyChk">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <polyline points="2,7 6,11 12,3" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <polyline points="1.5,6 5,9.5 10.5,2.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </div>
                 <div class="emergency-txt">
@@ -504,19 +106,19 @@
                 </div>
             </div>
 
-            <button class="btn-primary" id="issueBtn" disabled>Issue Ticket</button>
+            <button class="btn btn-primary btn-full" id="issueBtn" disabled>Issue Ticket</button>
             <div id="issueAlert" class="alert"></div>
         </div>
 
         <div class="empty-state" id="emptyState">
             <div class="eico">🎫</div>
             <div class="etitle">No ticket issued yet</div>
-            <div class="esub">Register or look up a patient, then select a department and issue a ticket</div>
+            <div class="esub">Register or look up a patient, then issue a queue ticket</div>
         </div>
     </div>
 </div>
 
-<!-- PRINT MODAL -->
+<!-- Print Modal -->
 <div class="modal-overlay" id="printModal">
     <div class="print-modal">
         <div class="print-header" id="printHeader">
@@ -539,143 +141,12 @@
             <img class="qr-preview" id="printQr" src="" alt="QR Code" style="display:none">
         </div>
         <div class="print-actions">
-            <button class="btn-close-modal" onclick="closePrintModal()">Close</button>
-            <button class="btn-print" id="btnPrint" onclick="printSlip()">Print Slip</button>
+            <button class="btn btn-close-modal" onclick="closePrintModal()">Close</button>
+            <button class="btn btn-print" id="btnPrint" onclick="printSlip()">Print Slip</button>
         </div>
     </div>
 </div>
 
-<script>
-    let currentNic = null, selectedDeptId = null, isEmergency = false, currentSlipUrl = null, currentTicketNumber = null;
-
-    fetch('/api/departments').then(r => r.json()).then(depts => {
-        const g = document.getElementById('deptGrid');
-        if (!depts.length) { g.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#94a3b8;padding:1rem;font-size:15px">No departments. Add one first.</div>'; return; }
-        g.innerHTML = depts.map(d => `<div class="dept-btn" onclick="selectDept(${d.id},this)"><span class="dname">${d.name}</span><span class="dtype">${d.departmentType}</span></div>`).join('');
-    }).catch(() => {});
-
-    function selectDept(id, el) {
-        document.querySelectorAll('.dept-btn').forEach(b => b.classList.remove('selected'));
-        el.classList.add('selected');
-        selectedDeptId = id;
-        checkReady();
-    }
-
-    document.getElementById('emergencyRow').addEventListener('click', () => {
-        isEmergency = !isEmergency;
-        document.getElementById('emergencyRow').classList.toggle('active', isEmergency);
-    });
-
-    function checkReady() {
-        document.getElementById('issueBtn').disabled = !(currentNic && selectedDeptId);
-    }
-
-    function setPatient(patient, nic) {
-        currentNic = nic;
-        const initials = (patient.fullName || nic).split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-        document.getElementById('patientAvatar').textContent = initials;
-        document.getElementById('patientName').textContent = patient.fullName || '—';
-        document.getElementById('patientNic').textContent = nic;
-        document.getElementById('patientPill').classList.add('show');
-        checkReady();
-    }
-
-    document.getElementById('lookupBtn').addEventListener('click', async () => {
-        const nic = document.getElementById('lookupNic').value.trim();
-        if (!nic) return;
-        try {
-            const res = await fetch(`/api/patients/${nic}`);
-            if (!res.ok) throw new Error();
-            setPatient(await res.json(), nic);
-        } catch {
-            currentNic = null;
-            document.getElementById('patientPill').classList.remove('show');
-            checkReady();
-            showAlert('issueAlert', 'Patient not found. Please register first.', 'warning');
-        }
-    });
-
-    document.getElementById('registerForm').addEventListener('submit', async e => {
-        e.preventDefault();
-        const data = Object.fromEntries(new FormData(e.target));
-        try {
-            const res = await fetch('/api/patients/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-            if (!res.ok) { const err = await res.json(); throw new Error(err.message || err.error); }
-            const p = await res.json();
-            setPatient(p, data.nic);
-            document.getElementById('lookupNic').value = data.nic;
-            showAlert('registerAlert', `${p.fullName || data.fullName} registered successfully`, 'success');
-            e.target.reset();
-        } catch (err) {
-            showAlert('registerAlert', err.message || 'Registration failed', 'danger');
-        }
-    });
-
-    document.getElementById('issueBtn').addEventListener('click', async () => {
-        const btn = document.getElementById('issueBtn');
-        btn.disabled = true;
-        btn.textContent = 'Issuing...';
-        try {
-            const res = await fetch('/api/queue/issue', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nic: currentNic, departmentId: parseInt(selectedDeptId), emergency: isEmergency }) });
-            if (!res.ok) { const err = await res.json(); throw new Error(err.message); }
-            const t = await res.json();
-            showPrintModal(t);
-            document.getElementById('emptyState').style.display = 'none';
-            showAlert('issueAlert', 'Ticket ' + t.ticketNumber + ' issued successfully!', 'success');
-        } catch (err) {
-            showAlert('issueAlert', err.message || 'Failed to issue ticket', 'danger');
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Issue Ticket';
-        }
-    });
-
-    function showPrintModal(t) {
-        currentSlipUrl = `/api/tickets/${t.ticketNumber}/slip`;
-        currentTicketNumber = t.ticketNumber;
-        const emerg = t.emergency || t.isEmergency;
-
-        document.getElementById('printTicketNum').textContent = t.ticketNumber;
-        document.getElementById('printPos').textContent = '#' + t.queuePosition;
-        document.getElementById('printWait').textContent = t.estimatedWaitMinutes + ' min';
-        document.getElementById('printStatus').textContent = t.status.replace(/_/g, ' ');
-        document.getElementById('printAhead').textContent = t.queuePosition - 1;
-        document.getElementById('printPatient').textContent = t.patient?.fullName || '—';
-        document.getElementById('printDept').textContent = t.department?.name || '—';
-        document.getElementById('printTicketId').textContent = t.ticketNumber;
-
-        document.getElementById('printHeader').className = 'print-header' + (emerg ? ' emergency' : '');
-        document.getElementById('printEmergBadge').classList.toggle('show', !!emerg);
-        document.getElementById('btnPrint').className = 'btn-print' + (emerg ? ' emergency' : '');
-
-        const qrImg = document.getElementById('printQr');
-        qrImg.src = `/api/tickets/${t.ticketNumber}/qr`;
-        qrImg.style.display = 'block';
-
-        document.getElementById('printModal').classList.add('show');
-    }
-
-    function closePrintModal() {
-        document.getElementById('printModal').classList.remove('show');
-        document.getElementById('patientPill').classList.remove('show');
-        document.getElementById('lookupNic').value = '';
-        currentNic = null; selectedDeptId = null; isEmergency = false;
-        document.getElementById('emergencyRow').classList.remove('active');
-        document.querySelectorAll('.dept-btn').forEach(b => b.classList.remove('selected'));
-        document.getElementById('emptyState').style.display = 'flex';
-        checkReady();
-    }
-
-    function printSlip() {
-        if (currentSlipUrl) window.open(currentSlipUrl, '_blank');
-    }
-
-    function showAlert(id, msg, type) {
-        const el = document.getElementById(id);
-        el.textContent = msg;
-        el.className = 'alert alert-' + type + ' show';
-        setTimeout(() => el.classList.remove('show'), 5000);
-    }
-</script>
+<script th:src="@{/js/reception.js}"></script>
 </body>
 </html>

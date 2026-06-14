@@ -1,0 +1,269 @@
+/* reception.css — Reception page-specific styles */
+
+/* ── Layout ── */
+.layout {
+    display: grid;
+    grid-template-columns: 480px 1fr;
+    height: calc(100vh - 48px);
+    overflow: hidden;
+}
+.panel { overflow-y: auto; padding: 2rem; }
+.panel-left  { border-right: 1px solid #e0e0e0; background: #fff; }
+.panel-right { background: #f4f4f4; }
+
+.section-heading {
+    font-size: 20px;
+    font-weight: 400;
+    color: #161616;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* ── Carbon text inputs (reception variant) ── */
+.field { margin-bottom: 1rem; }
+label {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    color: #525252;
+    margin-bottom: 4px;
+    letter-spacing: 0.01em;
+}
+input, select {
+    width: 100%;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    background: #f4f4f4;
+    border: none;
+    border-bottom: 1px solid #8d8d8d;
+    border-radius: 0;
+    color: #161616;
+    padding: 11px 16px;
+    outline: none;
+    appearance: none;
+}
+input:focus, select:focus { background: #fff; border-bottom: 2px solid #005d5d; }
+input::placeholder { color: #a8a8a8; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+/* ── Issue ticket tile ── */
+.tile {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+.tile-heading { font-size: 14px; font-weight: 600; color: #161616; margin-bottom: 1rem; }
+
+/* ── NIC lookup row ── */
+.lookup-row { display: flex; gap: 0; margin-bottom: 1rem; }
+.lookup-row input { flex: 1; border-right: none; }
+.lookup-row .btn {
+    flex-shrink: 0;
+    background: #161616;
+    color: #fff;
+    border-radius: 0;
+    padding: 11px 16px;
+    white-space: nowrap;
+}
+.lookup-row .btn:hover { background: #393939; }
+
+/* ── Patient pill ── */
+.patient-pill {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #defbe6;
+    border-left: 3px solid #24a148;
+    margin-bottom: 1rem;
+}
+.patient-pill.show { display: flex; }
+.patient-pill .avatar {
+    width: 36px; height: 36px;
+    background: #005d5d;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 500;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+.patient-pill .pname { font-size: 14px; font-weight: 600; color: #161616; }
+.patient-pill .pnic  { font-size: 12px; color: #525252; margin-top: 2px; }
+
+/* ── Dept info ── */
+.dept-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #f4f4f4;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 1rem;
+}
+.dept-info .di-label { font-size: 12px; color: #525252; }
+.dept-info .di-name  { font-size: 14px; font-weight: 600; color: #161616; margin-left: auto; }
+
+/* ── Emergency toggle ── */
+.emergency-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #fff8f1;
+    border: 1px solid #e0e0e0;
+    border-left: 3px solid #ba4e00;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.1s;
+}
+.emergency-row.active { background: #fff1f1; border-left-color: #da1e28; }
+.emergency-chk {
+    width: 20px; height: 20px;
+    border: 1px solid #8d8d8d;
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.1s;
+}
+.emergency-row.active .emergency-chk { background: #da1e28; border-color: #da1e28; }
+.emergency-chk svg { display: none; }
+.emergency-row.active .emergency-chk svg { display: block; }
+.emergency-txt .etitle { font-size: 14px; font-weight: 500; color: #161616; }
+.emergency-txt .esub   { font-size: 12px; color: #525252; margin-top: 2px; }
+
+/* ── Issue button (full-width) ── */
+.btn-full { width: 100%; padding: 13px 16px; font-size: 14px; margin-top: 0.5rem; justify-content: center; }
+
+/* ── Inline alerts ── */
+.alert {
+    padding: 12px 16px;
+    font-size: 14px;
+    display: none;
+    margin-top: 0.75rem;
+    border-left: 3px solid;
+}
+.alert.show       { display: block; }
+.alert-success    { background: #defbe6; color: #044317; border-left-color: #24a148; }
+.alert-danger     { background: #fff1f1; color: #da1e28; border-left-color: #da1e28; }
+.alert-warning    { background: #fdf6dd; color: #4d3800; border-left-color: #f1c21b; }
+
+/* ── Empty state ── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    color: #8d8d8d;
+    gap: 8px;
+}
+.empty-state .eico   { font-size: 3rem; margin-bottom: 8px; }
+.empty-state .etitle { font-size: 16px; font-weight: 400; color: #525252; }
+.empty-state .esub   { font-size: 14px; color: #8d8d8d; max-width: 280px; line-height: 1.5; }
+
+/* ── Print modal ── */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+.modal-overlay.show { display: flex; }
+.print-modal {
+    background: #fff;
+    width: 90%;
+    max-width: 420px;
+    overflow: hidden;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+}
+.print-header {
+    padding: 2rem;
+    text-align: center;
+    background: #f4f4f4;
+    border-bottom: 1px solid #e0e0e0;
+}
+.print-header.emergency { background: #fff1f1; }
+.print-header .ph-label {
+    font-size: 12px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #525252;
+    margin-bottom: 12px;
+}
+.print-header .ph-ticket {
+    font-size: 3.5rem;
+    font-weight: 300;
+    color: #005d5d;
+    letter-spacing: 4px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+.print-header.emergency .ph-ticket { color: #da1e28; }
+.print-emerg-badge {
+    display: none;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #da1e28;
+    background: #ffe0e0;
+    padding: 4px 12px;
+    width: fit-content;
+    margin: 10px auto 0;
+}
+.print-emerg-badge.show { display: block; }
+.print-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: #e0e0e0;
+}
+.print-detail { padding: 1.25rem; background: #fff; text-align: center; }
+.print-detail .pd-val {
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: #161616;
+    display: block;
+}
+.print-detail .pd-lbl {
+    font-size: 12px;
+    color: #525252;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+    display: block;
+}
+.print-meta { padding: 1.25rem; border-bottom: 1px solid #e0e0e0; }
+.print-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+}
+.print-meta-row .pm-lbl { font-size: 12px; color: #525252; }
+.print-meta-row .pm-val { font-size: 14px; font-weight: 500; color: #161616; }
+.qr-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+.qr-preview { width: 112px; height: 112px; }
+.print-actions { display: flex; gap: 0; }
+.print-actions .btn { flex: 1; padding: 14px; font-size: 14px; justify-content: center; }
+.btn-print { background: #005d5d; color: #fff; border-color: #005d5d; }
+.btn-print:hover { background: #004545; }
+.btn-print.emergency { background: #da1e28; border-color: #da1e28; }
+.btn-print.emergency:hover { background: #b81921; }
+.btn-close-modal { background: #e0e0e0; color: #161616; border-color: #e0e0e0; }
+.btn-close-modal:hover { background: #c6c6c6; }

@@ -1,0 +1,168 @@
+/* display-board.css — Display board page-specific styles */
+
+html, body { width: 100%; height: 100%; overflow: hidden; }
+body { display: flex; flex-direction: column; }
+
+/* ── Header ── */
+header {
+    background: #005d5d;
+    height: 64px;
+    padding: 0 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+.header-left  { display: flex; align-items: center; gap: 1.5rem; }
+.header-logo  {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-right: 1.5rem;
+    border-right: 1px solid rgba(255,255,255,0.25);
+}
+.header-logo-text { font-size: 16px; font-weight: 600; color: #fff; letter-spacing: 0.01em; }
+.header-dept  { font-size: 16px; font-weight: 400; color: rgba(255,255,255,0.8); }
+.header-right { display: flex; align-items: center; gap: 1.5rem; }
+.live-badge   {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.12);
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.live-dot {
+    width: 8px; height: 8px;
+    background: #42be65;
+    border-radius: 50%;
+    animation: livepulse 2s infinite;
+}
+@keyframes livepulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+.clock {
+    font-size: 1.75rem;
+    font-weight: 300;
+    color: rgba(255,255,255,0.9);
+    letter-spacing: 2px;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Main layout ── */
+main {
+    flex: 1;
+    display: flex;
+    gap: 1px;
+    background: #e0e0e0;
+    overflow: hidden;
+}
+
+/* ── Serving panel ── */
+.serving-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    background: #fff;
+}
+.serving-label {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #525252;
+    margin-bottom: 2rem;
+}
+.serving-number {
+    font-size: clamp(5rem, 16vw, 11rem);
+    font-weight: 300;
+    color: #005d5d;
+    letter-spacing: 4px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    transition: all 0.3s;
+}
+.serving-number.idle {
+    color: #a8a8a8;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight: 400;
+    letter-spacing: 2px;
+}
+.serving-number.flash { animation: numflash 0.5s ease; }
+@keyframes numflash {
+    0%   { transform: scale(0.95); opacity: 0.4; }
+    60%  { transform: scale(1.03); opacity: 1; }
+    100% { transform: scale(1);    opacity: 1; }
+}
+
+/* ── Side panel ── */
+.side-panel {
+    width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: #e0e0e0;
+    flex-shrink: 0;
+}
+.side-block { background: #f4f4f4; padding: 2rem; flex: 1; }
+.side-block.count-block {
+    background: #005d5d;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    padding: 2.5rem 2rem;
+}
+.side-label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #525252;
+    margin-bottom: 1rem;
+}
+
+/* ── Up Next list ── */
+.next-list  { display: flex; flex-direction: column; gap: 1px; background: #e0e0e0; }
+.next-item  {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #fff;
+}
+.next-item:first-child { background: #edf5ff; }
+.next-num   { font-size: 1.3rem; font-weight: 400; color: #161616; font-variant-numeric: tabular-nums; }
+.next-item:first-child .next-num { color: #005d5d; font-weight: 600; }
+.next-pos   { font-size: 12px; font-weight: 500; color: #525252; text-transform: uppercase; letter-spacing: 0.05em; }
+.next-empty { padding: 1.5rem; text-align: center; color: #8d8d8d; font-size: 14px; background: #fff; }
+
+/* ── Waiting count ── */
+.count-num {
+    font-size: 5rem;
+    font-weight: 300;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+}
+.count-lbl { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.7); letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* ── Footer ── */
+footer {
+    background: #fff;
+    border-top: 1px solid #e0e0e0;
+    padding: 0.875rem 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+.footer-tip { font-size: 14px; color: #525252; }
+.footer-url { font-size: 13px; color: #005d5d; font-weight: 500; }

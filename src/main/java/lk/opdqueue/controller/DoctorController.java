@@ -43,11 +43,12 @@ public class DoctorController {
 
         Long deptId = body.get("departmentId") != null
                 ? ((Number) body.get("departmentId")).longValue() : null;
-        if (deptId != null) {
-            Department dept = departmentRepository.findById(deptId)
-                    .orElseThrow(() -> new DepartmentNotFoundException("Department not found: " + deptId));
-            doc.setDepartment(dept);
-        }
+        Department dept = deptId != null
+                ? departmentRepository.findById(deptId)
+                    .orElseThrow(() -> new DepartmentNotFoundException("Department not found: " + deptId))
+                : departmentRepository.findAll().stream().findFirst()
+                    .orElseThrow(() -> new DepartmentNotFoundException("No departments exist"));
+        doc.setDepartment(dept);
         return ResponseEntity.ok(doctorRepository.save(doc));
     }
 
