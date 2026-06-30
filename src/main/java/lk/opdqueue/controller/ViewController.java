@@ -29,4 +29,9 @@ public class ViewController {
         model.addAttribute("ticketNumber", ticketNumber);
         return "patient-status";
     }
+
+    @GetMapping("/admin")
+    public String admin() {
+        return "admin";
+    }
 }

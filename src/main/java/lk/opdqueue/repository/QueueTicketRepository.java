@@ -39,4 +39,6 @@ public interface QueueTicketRepository extends JpaRepository<QueueTicket, UUID> 
 
     @Query("SELECT COUNT(q) > 0 FROM QueueTicket q WHERE q.patient.id = :patientId AND q.status IN :statuses")
     boolean existsByPatientIdAndStatusIn(@Param("patientId") java.util.UUID patientId, @Param("statuses") List<TicketStatus> statuses);
+
+    void deleteAllByPatientId(UUID patientId);
 }

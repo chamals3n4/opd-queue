@@ -200,10 +200,15 @@ public class QueueService {
                 .findAllByDepartmentIdAndStatusOrderByIsEmergencyDescQueuePositionAsc(
                         departmentId, TicketStatus.CALLED);
 
+        List<QueueTicket> sortedWaiting = sortTickets(waiting);
+        QueueTicket calledTicket = called.isEmpty() ? null : called.get(0);
+
         DisplayBoardResponse response = new DisplayBoardResponse();
         response.setDepartmentName(department.getName());
-        response.setCurrentlyCalledTicket(called.isEmpty() ? "-" : called.get(0).getTicketNumber());
-        response.setNextTickets(sortTickets(waiting).stream().limit(5).map(QueueTicket::getTicketNumber).toList());
+        response.setCurrentlyCalledTicket(calledTicket != null ? calledTicket.getTicketNumber() : "-");
+        response.setCurrentEmergency(calledTicket != null && calledTicket.isEmergency());
+        response.setNextTickets(sortedWaiting.stream().limit(5).map(QueueTicket::getTicketNumber).toList());
+        response.setEmergencyNextTickets(sortedWaiting.stream().limit(5).filter(QueueTicket::isEmergency).map(QueueTicket::getTicketNumber).toList());
         response.setTotalWaiting(waiting.size());
         return response;
     }
@@ -262,10 +267,15 @@ public class QueueService {
         List<QueueTicket> called = ticketRepository
                 .findAllByDepartmentIdAndStatusOrderByIsEmergencyDescQueuePositionAsc(deptId, TicketStatus.CALLED);
 
+        List<QueueTicket> sortedWaiting = sortTickets(waiting);
+        QueueTicket calledTicket = called.isEmpty() ? null : called.get(0);
+
         DisplayBoardResponse board = new DisplayBoardResponse();
         board.setDepartmentName(dept.getName());
-        board.setCurrentlyCalledTicket(called.isEmpty() ? "-" : called.get(0).getTicketNumber());
-        board.setNextTickets(sortTickets(waiting).stream().limit(5).map(QueueTicket::getTicketNumber).toList());
+        board.setCurrentlyCalledTicket(calledTicket != null ? calledTicket.getTicketNumber() : "-");
+        board.setCurrentEmergency(calledTicket != null && calledTicket.isEmergency());
+        board.setNextTickets(sortedWaiting.stream().limit(5).map(QueueTicket::getTicketNumber).toList());
+        board.setEmergencyNextTickets(sortedWaiting.stream().limit(5).filter(QueueTicket::isEmergency).map(QueueTicket::getTicketNumber).toList());
         board.setTotalWaiting(waiting.size());
         return board;
     }

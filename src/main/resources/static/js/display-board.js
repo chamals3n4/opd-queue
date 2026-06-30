@@ -26,17 +26,20 @@ function updateBoard(data) {
             el.classList.add('flash');
         }
         el.classList.remove('idle');
+        el.classList.toggle('emergency', !!data.currentEmergency);
     } else {
         el.textContent = 'Waiting...';
         el.classList.add('idle');
+        el.classList.remove('emergency');
     }
 
+    const emergencySet = new Set(data.emergencyNextTickets || []);
     const nextList = document.getElementById('nextTickets');
     const nexts    = (data.nextTickets || []).filter(t => t !== cur);
     const labels   = ['Next', '2nd', '3rd', '4th', '5th'];
     nextList.innerHTML = nexts.length
         ? nexts.slice(0, 5).map((t, i) =>
-            `<div class="next-item"><span class="next-num">${t}</span><span class="next-pos">${labels[i]}</span></div>`
+            `<div class="next-item"><span class="next-num${emergencySet.has(t) ? ' emerg' : ''}">${t}</span><span class="next-pos">${labels[i]}</span></div>`
           ).join('')
         : '<div class="next-empty">No patients waiting</div>';
 }

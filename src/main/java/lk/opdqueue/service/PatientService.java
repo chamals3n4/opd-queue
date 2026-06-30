@@ -5,17 +5,22 @@ import lk.opdqueue.dto.request.UpdatePatientRequest;
 import lk.opdqueue.exception.AppException;
 import lk.opdqueue.model.Patient;
 import lk.opdqueue.repository.PatientRepository;
+import lk.opdqueue.repository.QueueTicketRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 @Service
 public class PatientService {
 
     private final PatientRepository patientRepository;
+    private final QueueTicketRepository ticketRepository;
 
-    public PatientService(PatientRepository patientRepository) {
+    public PatientService(PatientRepository patientRepository,
+                          QueueTicketRepository ticketRepository) {
         this.patientRepository = patientRepository;
+        this.ticketRepository = ticketRepository;
     }
 
     public Patient register(RegisterPatientRequest request) {
@@ -47,10 +52,13 @@ public class PatientService {
         return patientRepository.save(patient);
     }
 
+    @Transactional
     public void delete(UUID id) {
         if (!patientRepository.existsById(id)) {
             throw new AppException(HttpStatus.NOT_FOUND, "Patient not found");
         }
+        // tickets reference the patient via FK, so remove them first
+        ticketRepository.deleteAllByPatientId(id);
         patientRepository.deleteById(id);
     }
 }
