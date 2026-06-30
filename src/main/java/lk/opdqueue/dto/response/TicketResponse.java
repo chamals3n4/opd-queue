@@ -13,7 +13,6 @@ public class TicketResponse {
     private TicketStatus status;
     private boolean isEmergency;
     private int queuePosition;
-    private int estimatedWaitMinutes;
     private String slipDownloadUrl;
     private LocalDateTime issuedAt;
 
@@ -37,9 +36,6 @@ public class TicketResponse {
 
     public int getQueuePosition() { return queuePosition; }
     public void setQueuePosition(int queuePosition) { this.queuePosition = queuePosition; }
-
-    public int getEstimatedWaitMinutes() { return estimatedWaitMinutes; }
-    public void setEstimatedWaitMinutes(int estimatedWaitMinutes) { this.estimatedWaitMinutes = estimatedWaitMinutes; }
 
     public String getSlipDownloadUrl() { return slipDownloadUrl; }
     public void setSlipDownloadUrl(String slipDownloadUrl) { this.slipDownloadUrl = slipDownloadUrl; }

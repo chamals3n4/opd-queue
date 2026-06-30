@@ -1,9 +1,10 @@
 package lk.opdqueue.controller;
 
-import lk.opdqueue.entity.Department;
-import lk.opdqueue.entity.Staff;
+import lk.opdqueue.exception.AppException;
 import lk.opdqueue.enums.StaffRole;
-import lk.opdqueue.exception.DepartmentNotFoundException;
+import lk.opdqueue.model.Department;
+import lk.opdqueue.model.Staff;
+import org.springframework.http.HttpStatus;
 import lk.opdqueue.repository.DepartmentRepository;
 import lk.opdqueue.repository.StaffRepository;
 import org.springframework.http.ResponseEntity;
@@ -49,9 +50,9 @@ public class StaffController {
                 ? ((Number) body.get("departmentId")).longValue() : null;
         Department dept = deptId != null
                 ? departmentRepository.findById(deptId)
-                    .orElseThrow(() -> new DepartmentNotFoundException("Department not found: " + deptId))
+                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND,"Department not found: " + deptId))
                 : departmentRepository.findAll().stream().findFirst()
-                    .orElseThrow(() -> new DepartmentNotFoundException("No departments exist"));
+                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND,"No departments exist"));
         staff.setDepartment(dept);
         return ResponseEntity.ok(staffRepository.save(staff));
     }
@@ -59,7 +60,7 @@ public class StaffController {
     @PutMapping("/{id}")
     public ResponseEntity<Staff> update(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         Staff staff = staffRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Staff not found: " + id));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Staff not found: " + id));
         if (body.containsKey("fullName")) staff.setFullName((String) body.get("fullName"));
         if (body.containsKey("role")) staff.setRole(StaffRole.valueOf((String) body.get("role")));
         if (body.containsKey("username")) staff.setUsername((String) body.get("username"));
@@ -70,7 +71,7 @@ public class StaffController {
         if (body.containsKey("departmentId") && body.get("departmentId") != null) {
             Long deptId = ((Number) body.get("departmentId")).longValue();
             Department dept = departmentRepository.findById(deptId)
-                    .orElseThrow(() -> new DepartmentNotFoundException("Department not found: " + deptId));
+                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND,"Department not found: " + deptId));
             staff.setDepartment(dept);
         }
         return ResponseEntity.ok(staffRepository.save(staff));

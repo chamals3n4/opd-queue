@@ -1,6 +1,6 @@
 package lk.opdqueue.repository;
 
-import lk.opdqueue.entity.Appointment;
+import lk.opdqueue.model.Appointment;
 import lk.opdqueue.enums.TicketStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

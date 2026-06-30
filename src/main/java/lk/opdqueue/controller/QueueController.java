@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import lk.opdqueue.dto.request.IssueTicketRequest;
 import lk.opdqueue.dto.response.DisplayBoardResponse;
 import lk.opdqueue.dto.response.QueueStatusResponse;
-import lk.opdqueue.entity.QueueTicket;
+import lk.opdqueue.model.QueueTicket;
 import lk.opdqueue.service.QueueService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

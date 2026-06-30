@@ -1,7 +1,7 @@
 package lk.opdqueue.controller;
 
-import lk.opdqueue.entity.Patient;
-import lk.opdqueue.entity.QueueTicket;
+import lk.opdqueue.model.Patient;
+import lk.opdqueue.model.QueueTicket;
 import lk.opdqueue.enums.TicketStatus;
 import lk.opdqueue.repository.PatientRepository;
 import lk.opdqueue.repository.QueueTicketRepository;

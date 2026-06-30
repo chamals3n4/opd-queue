@@ -1,9 +1,9 @@
 package lk.opdqueue.config;
 
-import lk.opdqueue.entity.Department;
-import lk.opdqueue.entity.Staff;
 import lk.opdqueue.enums.DepartmentType;
 import lk.opdqueue.enums.StaffRole;
+import lk.opdqueue.model.Department;
+import lk.opdqueue.model.Staff;
 import lk.opdqueue.repository.DepartmentRepository;
 import lk.opdqueue.repository.StaffRepository;
 import org.springframework.boot.CommandLineRunner;

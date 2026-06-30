@@ -1,6 +1,6 @@
 package lk.opdqueue.repository;
 
-import lk.opdqueue.entity.Department;
+import lk.opdqueue.model.Department;
 import lk.opdqueue.enums.DepartmentType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

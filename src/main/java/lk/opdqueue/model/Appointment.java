@@ -1,4 +1,4 @@
-package lk.opdqueue.entity;
+package lk.opdqueue.model;
 
 import jakarta.persistence.*;
 import lk.opdqueue.enums.TicketStatus;

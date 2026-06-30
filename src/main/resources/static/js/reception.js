@@ -108,7 +108,6 @@ function showPrintModal(t) {
 
     document.getElementById('printTicketNum').textContent = t.ticketNumber;
     document.getElementById('printPos').textContent       = '#' + t.queuePosition;
-    document.getElementById('printWait').textContent      = t.estimatedWaitMinutes + ' min';
     document.getElementById('printStatus').textContent    = t.status.replace(/_/g, ' ');
     document.getElementById('printAhead').textContent     = t.queuePosition - 1;
     document.getElementById('printPatient').textContent   = t.patient?.fullName || '—';

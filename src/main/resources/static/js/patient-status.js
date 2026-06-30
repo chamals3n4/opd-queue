@@ -18,9 +18,6 @@ function updateUI(data) {
 
     document.getElementById('deptName').textContent     = data.departmentName || '—';
     document.getElementById('queuePos').textContent     = data.queuePosition  != null ? '#' + data.queuePosition  : '—';
-    document.getElementById('peopleAhead').textContent  = data.peopleAhead    != null ? data.peopleAhead : '—';
-    document.getElementById('waitTime').textContent     = data.estimatedWaitMinutes != null ? data.estimatedWaitMinutes + ' minutes' : '—';
-
     const badge = document.getElementById('statusBadge');
     badge.className = 'status-badge status-' + status;
     badge.innerHTML = `<span class="bdot"></span>${status.replace(/_/g, ' ')}`;
@@ -31,15 +28,10 @@ function updateUI(data) {
     header.classList.toggle('called', called);
 
     const completed = status === 'COMPLETED' || status === 'NO_SHOW' || status === 'CANCELLED';
-    const ahead = data.peopleAhead || 0;
-    const pos   = data.queuePosition || 1;
-    const pct   = completed ? 100 : (pos > 0 ? Math.round(((pos - ahead - 1) / Math.max(1, pos)) * 100) : 0);
 
-    document.getElementById('progFill').style.width = pct + '%';
+    document.getElementById('progFill').style.width = completed ? '100%' : '0%';
     document.getElementById('progFill').classList.toggle('complete', completed);
-    document.getElementById('progLabel').textContent = completed
-        ? 'Completed'
-        : (ahead > 0 ? ahead + ' patient(s) ahead of you' : 'You are next!');
+    document.getElementById('progLabel').textContent = completed ? 'Completed' : 'In queue';
 
     document.getElementById('updTime').textContent =
         'Updated ' + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });

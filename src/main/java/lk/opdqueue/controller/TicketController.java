@@ -3,7 +3,8 @@ package lk.opdqueue.controller;
 import lk.opdqueue.repository.QueueTicketRepository;
 import lk.opdqueue.service.SlipGeneratorService;
 import lk.opdqueue.util.QRCodeGenerator;
-import lk.opdqueue.exception.TicketNotFoundException;
+import lk.opdqueue.exception.AppException;
+import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -32,7 +33,7 @@ public class TicketController {
     @GetMapping("/{ticketNumber}/qr")
     public ResponseEntity<byte[]> getQr(@PathVariable String ticketNumber) throws Exception {
         ticketRepository.findByTicketNumber(ticketNumber)
-                .orElseThrow(() -> new TicketNotFoundException("Ticket not found: " + ticketNumber));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Ticket not found: " + ticketNumber));
         String qrContent = baseUrl + "/status/" + ticketNumber;
         byte[] qrBytes = qrCodeGenerator.generate(qrContent, 300, 300);
         return ResponseEntity.ok()

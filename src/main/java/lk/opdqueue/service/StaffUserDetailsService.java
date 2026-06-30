@@ -1,6 +1,6 @@
 package lk.opdqueue.service;
 
-import lk.opdqueue.entity.Staff;
+import lk.opdqueue.model.Staff;
 import lk.opdqueue.repository.StaffRepository;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;

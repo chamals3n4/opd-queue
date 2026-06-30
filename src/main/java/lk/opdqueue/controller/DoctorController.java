@@ -1,10 +1,11 @@
 package lk.opdqueue.controller;
 
-import lk.opdqueue.entity.Department;
-import lk.opdqueue.entity.Doctor;
-import lk.opdqueue.exception.DepartmentNotFoundException;
+import lk.opdqueue.exception.AppException;
+import lk.opdqueue.model.Department;
+import lk.opdqueue.model.Doctor;
 import lk.opdqueue.repository.DepartmentRepository;
 import lk.opdqueue.repository.DoctorRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,9 +46,9 @@ public class DoctorController {
                 ? ((Number) body.get("departmentId")).longValue() : null;
         Department dept = deptId != null
                 ? departmentRepository.findById(deptId)
-                    .orElseThrow(() -> new DepartmentNotFoundException("Department not found: " + deptId))
+                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND,"Department not found: " + deptId))
                 : departmentRepository.findAll().stream().findFirst()
-                    .orElseThrow(() -> new DepartmentNotFoundException("No departments exist"));
+                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND,"No departments exist"));
         doc.setDepartment(dept);
         return ResponseEntity.ok(doctorRepository.save(doc));
     }
@@ -55,7 +56,7 @@ public class DoctorController {
     @PutMapping("/{id}")
     public ResponseEntity<Doctor> update(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         Doctor doc = doctorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Doctor not found: " + id));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Doctor not found: " + id));
         if (body.containsKey("fullName")) doc.setFullName((String) body.get("fullName"));
         if (body.containsKey("specialization")) doc.setSpecialization((String) body.get("specialization"));
         if (body.containsKey("roomNumber")) doc.setRoomNumber((String) body.get("roomNumber"));
@@ -65,7 +66,7 @@ public class DoctorController {
         if (body.containsKey("departmentId") && body.get("departmentId") != null) {
             Long deptId = ((Number) body.get("departmentId")).longValue();
             Department dept = departmentRepository.findById(deptId)
-                    .orElseThrow(() -> new DepartmentNotFoundException("Department not found: " + deptId));
+                    .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND,"Department not found: " + deptId));
             doc.setDepartment(dept);
         }
         return ResponseEntity.ok(doctorRepository.save(doc));

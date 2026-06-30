@@ -1,12 +1,11 @@
-package lk.opdqueue.entity;
+package lk.opdqueue.model;
 
 import jakarta.persistence.*;
-import lk.opdqueue.enums.StaffRole;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "staff")
-public class Staff {
+@Table(name = "doctors")
+public class Doctor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,15 +14,14 @@ public class Staff {
     @Column(nullable = false)
     private String fullName;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private StaffRole role;
-
-    @Column(nullable = false, unique = true)
-    private String username;
+    private String specialization;
 
     @Column(nullable = false)
-    private String passwordHash;
+    private String roomNumber;
+
+    @Column(nullable = false)
+    private boolean isAvailable;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", nullable = false)
@@ -35,6 +33,7 @@ public class Staff {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        isAvailable = true;
     }
 
     public Long getId() { return id; }
@@ -43,14 +42,14 @@ public class Staff {
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public StaffRole getRole() { return role; }
-    public void setRole(StaffRole role) { this.role = role; }
+    public String getSpecialization() { return specialization; }
+    public void setSpecialization(String specialization) { this.specialization = specialization; }
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public String getRoomNumber() { return roomNumber; }
+    public void setRoomNumber(String roomNumber) { this.roomNumber = roomNumber; }
 
-    public String getPasswordHash() { return passwordHash; }
-    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public boolean isAvailable() { return isAvailable; }
+    public void setAvailable(boolean available) { isAvailable = available; }
 
     public Department getDepartment() { return department; }
     public void setDepartment(Department department) { this.department = department; }

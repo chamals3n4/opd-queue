@@ -2,7 +2,7 @@ package lk.opdqueue.controller;
 
 import jakarta.validation.Valid;
 import lk.opdqueue.dto.request.CreateAppointmentRequest;
-import lk.opdqueue.entity.Appointment;
+import lk.opdqueue.model.Appointment;
 import lk.opdqueue.service.AppointmentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

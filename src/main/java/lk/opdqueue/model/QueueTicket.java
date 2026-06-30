@@ -1,4 +1,4 @@
-package lk.opdqueue.entity;
+package lk.opdqueue.model;
 
 import jakarta.persistence.*;
 import lk.opdqueue.enums.TicketStatus;
@@ -34,9 +34,6 @@ public class QueueTicket {
     @Column(nullable = false)
     private int queuePosition;
 
-    @Column(nullable = false)
-    private int estimatedWaitMinutes;
-
     @Column(nullable = false, updatable = false)
     private LocalDateTime issuedAt;
 
@@ -71,9 +68,6 @@ public class QueueTicket {
 
     public int getQueuePosition() { return queuePosition; }
     public void setQueuePosition(int queuePosition) { this.queuePosition = queuePosition; }
-
-    public int getEstimatedWaitMinutes() { return estimatedWaitMinutes; }
-    public void setEstimatedWaitMinutes(int estimatedWaitMinutes) { this.estimatedWaitMinutes = estimatedWaitMinutes; }
 
     public LocalDateTime getIssuedAt() { return issuedAt; }
 

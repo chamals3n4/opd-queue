@@ -1,7 +1,8 @@
 package lk.opdqueue.controller;
 
-import lk.opdqueue.entity.Department;
-import lk.opdqueue.exception.DepartmentNotFoundException;
+import lk.opdqueue.exception.AppException;
+import lk.opdqueue.model.Department;
+import org.springframework.http.HttpStatus;
 import lk.opdqueue.repository.DepartmentRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +36,7 @@ public class DepartmentController {
     @PutMapping("/{id}")
     public ResponseEntity<Department> update(@PathVariable Long id, @RequestBody Department update) {
         Department dept = departmentRepository.findById(id)
-                .orElseThrow(() -> new DepartmentNotFoundException("Department not found: " + id));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Department not found: " + id));
         dept.setName(update.getName());
         dept.setDepartmentType(update.getDepartmentType());
         dept.setMaxQueueCapacity(update.getMaxQueueCapacity());

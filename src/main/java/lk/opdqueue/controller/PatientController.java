@@ -3,7 +3,7 @@ package lk.opdqueue.controller;
 import jakarta.validation.Valid;
 import lk.opdqueue.dto.request.RegisterPatientRequest;
 import lk.opdqueue.dto.request.UpdatePatientRequest;
-import lk.opdqueue.entity.Patient;
+import lk.opdqueue.model.Patient;
 import lk.opdqueue.service.PatientService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

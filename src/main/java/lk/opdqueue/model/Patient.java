@@ -1,4 +1,4 @@
-package lk.opdqueue.entity;
+package lk.opdqueue.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;

@@ -113,7 +113,6 @@ async function loadQueue() {
                     ${emerg ? '<span class="emerg-tag" style="margin-left:6px">EMRG</span>' : ''}
                 </td>
                 <td>${t.patient?.fullName || '—'}</td>
-                <td style="color:#6b7280">${t.estimatedWaitMinutes} min</td>
                 <td><span class="pill pill-${t.status}">${t.status.replace(/_/g, ' ')}</span></td>
                 <td><div class="action-group">${actions || '<span style="color:#d1d5db">—</span>'}</div></td>
             </tr>`;

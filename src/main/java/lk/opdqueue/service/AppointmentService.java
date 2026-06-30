@@ -1,13 +1,14 @@
 package lk.opdqueue.service;
 
 import lk.opdqueue.dto.request.CreateAppointmentRequest;
-import lk.opdqueue.entity.Appointment;
-import lk.opdqueue.entity.Doctor;
-import lk.opdqueue.entity.Patient;
+import lk.opdqueue.exception.AppException;
+import lk.opdqueue.model.Appointment;
+import lk.opdqueue.model.Doctor;
+import lk.opdqueue.model.Patient;
 import lk.opdqueue.enums.TicketStatus;
-import lk.opdqueue.exception.DepartmentNotFoundException;
 import lk.opdqueue.repository.AppointmentRepository;
 import lk.opdqueue.repository.DoctorRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +31,8 @@ public class AppointmentService {
     public Appointment create(CreateAppointmentRequest request) {
         Patient patient = patientService.findByNic(request.getNic());
         Doctor doctor = doctorRepository.findById(request.getDoctorId())
-                .orElseThrow(() -> new DepartmentNotFoundException("Doctor not found: " + request.getDoctorId()));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND,
+                        "Doctor not found: " + request.getDoctorId()));
 
         Appointment appointment = new Appointment();
         appointment.setPatient(patient);
@@ -43,7 +45,8 @@ public class AppointmentService {
 
     public Appointment findById(UUID id) {
         return appointmentRepository.findById(id)
-                .orElseThrow(() -> new DepartmentNotFoundException("Appointment not found: " + id));
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND,
+                        "Appointment not found: " + id));
     }
 
     public List<Appointment> findByPatientNic(String nic) {
