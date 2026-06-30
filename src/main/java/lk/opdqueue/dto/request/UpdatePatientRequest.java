@@ -4,10 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
-public class RegisterPatientRequest {
-
-    @NotBlank(message = "NIC is required")
-    private String nic;
+public class UpdatePatientRequest {
 
     @NotBlank(message = "Full name is required")
     private String fullName;
@@ -20,9 +17,6 @@ public class RegisterPatientRequest {
 
     @NotBlank(message = "Contact number is required")
     private String contactNumber;
-
-    public String getNic() { return nic; }
-    public void setNic(String nic) { this.nic = nic; }
 
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }

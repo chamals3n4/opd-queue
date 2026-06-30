@@ -375,8 +375,11 @@ function renderPatientPage() {
         <td><strong>${p.fullName}</strong></td>
         <td style="color:#6b7280">${p.gender || '—'}</td>
         <td style="color:#6b7280">${p.contactNumber}</td>
-        <td><span class="pill ${p.patientType === 'WALK_IN' ? 'pill-WAITING' : 'pill-COMPLETED'}">${(p.patientType || '').replace(/_/g, ' ')}</span></td>
         <td style="color:#9ca3af;font-size:12px">${p.createdAt ? new Date(p.createdAt).toLocaleDateString() : '—'}</td>
+        <td><div class="action-group">
+            <button class="btn btn-secondary" onclick="editPatient('${p.id}')">Edit</button>
+            <button class="btn btn-danger" onclick="deletePatient('${p.id}', '${p.fullName.replace(/'/g, "\\'")}')">Remove</button>
+        </div></td>
     </tr>`).join('') : '<tr><td colspan="6" class="empty-cell"><div class="empty-cell-title">No patients found</div></td></tr>';
 
     const bar = document.getElementById('patientPagination');
@@ -400,35 +403,73 @@ function renderPatientPage() {
     ).join('');
 }
 
-function openPatientModal() {
-    document.getElementById('patientNic').value       = '';
-    document.getElementById('patientFullName').value  = '';
-    document.getElementById('patientDob').value       = '';
-    document.getElementById('patientGender').value    = '';
-    document.getElementById('patientContact').value   = '';
-    document.getElementById('patientType').value      = 'WALK_IN';
+function openPatientModal(patient) {
+    const isEdit = !!patient;
+    document.getElementById('patientEditId').value        = isEdit ? patient.id : '';
+    document.getElementById('patientNic').value           = isEdit ? patient.nic : '';
+    document.getElementById('patientNic').readOnly        = isEdit;
+    document.getElementById('patientFullName').value      = isEdit ? patient.fullName : '';
+    document.getElementById('patientDob').value           = isEdit ? (patient.dateOfBirth || '') : '';
+    document.getElementById('patientGender').value        = isEdit ? (patient.gender || '') : '';
+    document.getElementById('patientContact').value       = isEdit ? patient.contactNumber : '';
+    document.getElementById('patientModalTitle').textContent = isEdit ? 'Edit Patient' : 'Register Patient';
+    document.getElementById('patientSaveBtn').textContent    = isEdit ? 'Save Changes' : 'Register';
     document.getElementById('patientModal').classList.add('open');
-    document.getElementById('patientNic').focus();
+    if (!isEdit) document.getElementById('patientNic').focus();
 }
 function closePatientModal() { document.getElementById('patientModal').classList.remove('open'); }
 
+function editPatient(id) {
+    const patient = allPatients.find(p => p.id === id);
+    if (patient) openPatientModal(patient);
+}
+
+function deletePatient(id, name) {
+    showConfirm(
+        'Remove Patient',
+        `"${name}" will be permanently removed from the system.`,
+        async () => {
+            try {
+                const res = await apiFetch(`/api/patients/${id}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error();
+                toast('Patient removed', 'success');
+                loadPatients();
+            } catch { toast('Failed to remove patient', 'danger'); }
+        }
+    );
+}
+
 async function savePatient() {
-    const body = {
-        nic:           document.getElementById('patientNic').value.trim(),
-        fullName:      document.getElementById('patientFullName').value.trim(),
-        dateOfBirth:   document.getElementById('patientDob').value,
-        gender:        document.getElementById('patientGender').value,
-        contactNumber: document.getElementById('patientContact').value.trim(),
-        patientType:   document.getElementById('patientType').value,
-    };
-    if (!body.nic || !body.fullName) { toast('NIC and full name are required', 'danger'); return; }
+    const id            = document.getElementById('patientEditId').value;
+    const isEdit        = !!id;
+    const nic           = document.getElementById('patientNic').value.trim();
+    const fullName      = document.getElementById('patientFullName').value.trim();
+    const dateOfBirth   = document.getElementById('patientDob').value;
+    const gender        = document.getElementById('patientGender').value;
+    const contactNumber = document.getElementById('patientContact').value.trim();
+
+    if (!nic || !fullName) { toast('NIC and full name are required', 'danger'); return; }
+
     try {
-        const res = await apiFetch('/api/patients/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        let res;
+        if (isEdit) {
+            res = await apiFetch(`/api/patients/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fullName, dateOfBirth, gender, contactNumber })
+            });
+        } else {
+            res = await apiFetch('/api/patients/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nic, fullName, dateOfBirth, gender, contactNumber })
+            });
+        }
         if (!res.ok) { const err = await res.json(); throw new Error(err.message || err.error); }
         closePatientModal();
-        toast('Patient registered successfully', 'success');
+        toast(isEdit ? 'Patient updated' : 'Patient registered successfully', 'success');
         loadPatients();
-    } catch (err) { toast(err.message || 'Registration failed', 'danger'); }
+    } catch (err) { toast(err.message || (isEdit ? 'Update failed' : 'Registration failed'), 'danger'); }
 }
 
 // ── Toast ──────────────────────────────────────────────────────

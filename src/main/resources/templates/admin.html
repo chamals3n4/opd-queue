@@ -478,8 +478,8 @@
                                     <th>Full Name</th>
                                     <th>Gender</th>
                                     <th>Contact</th>
-                                    <th>Type</th>
                                     <th>Registered</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="patientTableBody">
@@ -634,12 +634,13 @@
         <div class="modal-overlay" id="patientModal">
             <div class="modal">
                 <div class="modal-header">
-                    <div class="modal-title">Register Patient</div>
+                    <div class="modal-title" id="patientModalTitle">Register Patient</div>
                     <button class="modal-close" onclick="closePatientModal()">
                         ×
                     </button>
                 </div>
                 <div class="modal-body">
+                    <input type="hidden" id="patientEditId" />
                     <div class="form-group">
                         <label class="form-label">NIC Number</label>
                         <input
@@ -678,25 +679,14 @@
                             </select>
                         </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Contact Number</label>
-                            <input
-                                class="form-control"
-                                type="text"
-                                id="patientContact"
-                                placeholder="07XXXXXXXX"
-                            />
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Patient Type</label>
-                            <select class="form-control" id="patientType">
-                                <option value="WALK_IN">Walk-in</option>
-                                <option value="PRE_REGISTERED">
-                                    Pre-registered
-                                </option>
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label">Contact Number</label>
+                        <input
+                            class="form-control"
+                            type="text"
+                            id="patientContact"
+                            placeholder="07XXXXXXXX"
+                        />
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -706,7 +696,7 @@
                     >
                         Cancel
                     </button>
-                    <button class="btn btn-primary" onclick="savePatient()">
+                    <button class="btn btn-primary" id="patientSaveBtn" onclick="savePatient()">
                         Register
                     </button>
                 </div>

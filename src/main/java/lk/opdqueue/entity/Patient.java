@@ -2,7 +2,6 @@ package lk.opdqueue.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lk.opdqueue.enums.PatientType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -31,10 +30,6 @@ public class Patient {
     @Column(nullable = false)
     private String contactNumber;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private PatientType patientType;
-
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -60,9 +55,6 @@ public class Patient {
 
     public String getContactNumber() { return contactNumber; }
     public void setContactNumber(String contactNumber) { this.contactNumber = contactNumber; }
-
-    public PatientType getPatientType() { return patientType; }
-    public void setPatientType(PatientType patientType) { this.patientType = patientType; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
 }
